@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#FF3B4E"/>
+
+<link rel="manifest" href="./manifest.webmanifest"/>
+<link rel="icon" href="./icon.svg" type="image/svg+xml"/>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0C0D12;--bg2:#13141C;--bg3:#1A1C28;--bg4:#212435;
+  --border:#2A2D40;--border2:#353855;
+  --red:#FF3B4E;--red2:#FF6B35;--red-glow:rgba(255,59,78,.25);
+  --amber:#FFAB00;--amber-dim:rgba(255,171,0,.15);
+  --green:#00E676;--green-dim:rgba(0,230,118,.12);
+  --blue:#3D8EFF;--blue-dim:rgba(61,142,255,.12);
+  --purple:#A78BFA;--purple-dim:rgba(167,139,250,.12);
+  --text:#F0F2FF;--text2:#9098B8;--text3:#5A6080;
+  --card-r:18px;--btn-r:14px;
+}
+html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;align-items:flex-start;padding:16px 0;font-family:'Outfit',sans-serif;}
+.phone{
+  width:390px;height:844px;background:var(--bg);border-radius:52px;
+  border:2px solid #2A2D40;overflow:hidden;display:flex;flex-direction:column;
+  position:relative;
+  box-shadow:0 0 0 1px #111,0 40px 120px rgba(0,0,0,.9),0 0 60px rgba(255,59,78,.08);
+}
+.statusbar{
+  height:50px;padding:14px 28px 0;display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;font-weight:600;color:var(--text2);flex-shrink:0;position:relative;z-index:10;
+}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:36px;background:var(--bg);border-radius:0 0 20px 20px;display:flex;align-items:center;justify-content:center;}
+.notch-cam{width:12px;height:12px;background:#111;border-radius:50%;border:2px solid #222;}
+.statusbar-icons{display:flex;gap:5px;align-items:center;}
+.bar{width:3px;background:var(--text2);border-radius:1px;}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;}
+.scroll::-webkit-scrollbar{display:none;}
+.page{display:none;min-height:100%;flex-direction:column;}
+.page.active{display:flex;}
+.topnav{padding:12px 20px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20;border-bottom:1px solid var(--border);}
+.app-logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--red),var(--red2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px var(--red-glow);}
+.logo-name{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
+.logo-name em{color:var(--red);font-style:normal;}
+.score-pill{background:linear-gradient(135deg,var(--red),var(--red2));border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px;box-shadow:0 4px 16px var(--red-glow);cursor:pointer;transition:transform .15s;}
+.score-pill:active{transform:scale(.95);}
+.filter-wrap{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;}
+.filter-wrap::-webkit-scrollbar{display:none;}
+.chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;border:1.5px solid var(--border2);color:var(--text2);background:var(--bg3);transition:all .2s;font-family:'Outfit',sans-serif;}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 2px 12px var(--red-glow);}
+.map-wrap{position:relative;height:280px;overflow:hidden;background:#0E1018;flex-shrink:0;}
+.map-canvas{position:absolute;inset:0;}
+.map-fade-top{position:absolute;top:0;left:0;right:0;height:30px;background:linear-gradient(var(--bg),transparent);pointer-events:none;z-index:5;}
+.map-fade-bot{position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--bg));pointer-events:none;z-index:5;}
+.map-tools{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:10;}
+.map-btn{width:38px;height:38px;background:rgba(19,20,28,.9);border:1px solid var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;backdrop-filter:blur(8px);transition:background .2s;}
+.map-btn:hover{background:var(--bg3);}
+.map-scale{position:absolute;bottom:44px;left:16px;z-index:10;display:flex;align-items:center;gap:5px;}
+.scale-bar{width:48px;height:3px;background:var(--text3);border-radius:2px;}
+.scale-label{font-size:9px;color:var(--text3);}
+.pin{position:absolute;cursor:pointer;z-index:8;transform-origin:bottom center;transition:transform .2s;}
+.pin:hover{transform:scale(1.15) translateY(-4px);z-index:15;}
+.pin-body{width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.6);border:2px solid rgba(255,255,255,.2);}
+.pin-body span{transform:rotate(45deg);font-size:17px;display:block;}
+.pin-label{position:absolute;top:-32px;left:50%;transform:translateX(-50%);background:rgba(19,20,28,.95);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;font-size:10px;font-weight:600;color:var(--text);white-space:nowrap;backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;font-family:'Outfit',sans-serif;}
+.pin:hover .pin-label{opacity:1;}
+.pulse{position:absolute;inset:0;border-radius:50%;animation:pulse 2s ease-out infinite;opacity:0;border:2px solid;}
+@keyframes pulse{0%{transform:scale(.8);opacity:.8}100%{transform:scale(2.2);opacity:0}}
+.my-loc{position:absolute;width:16px;height:16px;z-index:9;transform:translate(-50%,-50%);}
+.loc-dot{width:16px;height:16px;background:var(--blue);border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(61,142,255,.25);animation:locPulse 2s ease-in-out infinite;}
+@keyframes locPulse{0%,100%{box-shadow:0 0 0 6px rgba(61,142,255,.25)}50%{box-shadow:0 0 0 12px rgba(61,142,255,.1)}}
+.heat{position:absolute;border-radius:50%;filter:blur(22px);pointer-events:none;}
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border);flex-shrink:0;}
+.stat-box{background:var(--bg2);padding:12px 8px;text-align:center;}
+.stat-n{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+.stat-l{font-size:10px;color:var(--text2);font-weight:500;margin-top:3px;}
+.sec{padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between;}
+.sec-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;}
+.sec-more{font-size:11px;color:var(--red);font-weight:600;cursor:pointer;}
+.hazard-list{padding:10px 16px 16px;display:flex;flex-direction:column;gap:10px;}
+.hcard{background:var(--bg3);border:1px solid var(--border);border-radius:var(--card-r);padding:14px;display:flex;gap:12px;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;overflow:hidden;}
+.hcard:hover{border-color:var(--border2);transform:translateX(3px);}
+.hcard:active{transform:scale(.98);}
+.hcard-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.hcard-body{flex:1;min-width:0;}
+.hcard-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3;}
+.hcard-loc{font-size:11px;color:var(--text2);margin-bottom:7px;display:flex;align-items:center;gap:4px;}
+.hcard-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.tag{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;letter-spacing:.3px;}
+.vote-btn{margin-left:auto;display:flex;align-items:center;gap:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;}
+.vote-btn:hover{border-color:var(--red);color:var(--red);}
+.vote-btn.voted{background:var(--red-glow);border-color:var(--red);color:var(--red);}
+.vote-pop{animation:votePop .3s ease;}
+@keyframes votePop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.fab-wrap{position:absolute;bottom:80px;right:16px;z-index:30;}
+.fab{background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;border:none;border-radius:28px;padding:15px 22px;display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 32px var(--red-glow),0 2px 8px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s;white-space:nowrap;font-family:'Outfit',sans-serif;letter-spacing:.2px;}
+.fab:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 12px 40px var(--red-glow);}
+.fab:active{transform:scale(.97);}
+.bottom-tab{background:rgba(13,14,20,.97);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 0 20px;flex-shrink:0;position:relative;z-index:20;}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px;}
+.tab-icon-wrap{position:relative;}
+.tab-icon{font-size:22px;transition:transform .2s;}
+.tab-item.on .tab-icon{transform:scale(1.1);}
+.tab-label{font-size:10px;font-weight:600;color:var(--text3);transition:color .2s;font-family:'Outfit',sans-serif;}
+.tab-item.on .tab-label{color:var(--red);}
+.tab-badge{position:absolute;top:-5px;right:-8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:10px;padding:1px 5px;line-height:1.4;min-width:16px;text-align:center;}
+.tab-dot{width:5px;height:5px;background:var(--red);border-radius:50%;position:absolute;top:-3px;right:-2px;animation:tabBlink 2s ease-in-out infinite;}
+@keyframes tabBlink{0%,100%{opacity:1}50%{opacity:.3}}
+.modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.75);z-index:40;display:flex;align-items:flex-end;backdrop-filter:blur(6px);animation:bgIn .2s ease;}
+@keyframes bgIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border-radius:28px 28px 0 0;width:100%;border-top:1px solid var(--border2);padding:20px 20px 36px;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:42px;height:4px;background:var(--border2);border-radius:4px;margin:0 auto 20px;}
+.modal-title{font-size:17px;font-weight:800;color:var(--text);text-align:center;margin-bottom:18px;}
+.modal-subtitle{font-size:12px;color:var(--text2);text-align:center;margin-top:-14px;margin-bottom:18px;}
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:20px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);transition:all .3s;}
+.step-dot.on{width:24px;border-radius:4px;background:var(--red);}
+.step-dot.done{background:var(--green);}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.cat-btn{background:var(--bg3);border:1.5px solid var(--border);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:all .2s;color:var(--text);font-family:'Outfit',sans-serif;}
+.cat-btn span:first-child{font-size:26px;}
+.cat-btn span:last-child{font-size:11px;font-weight:600;text-align:center;line-height:1.2;}
+.cat-btn:hover,.cat-btn.sel{border-color:var(--red);background:rgba(255,59,78,.08);}
+.cat-btn.sel{box-shadow:0 0 0 1px var(--red);}
+.sev-wrap{margin-bottom:20px;}
+.sev-label{font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;justify-content:space-between;}
+.sev-dots{display:flex;gap:8px;justify-content:center;}
+.sev-dot{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid var(--border);font-size:16px;transition:all .2s;background:var(--bg3);}
+.sev-dot.sel{border-color:var(--amber);background:var(--amber-dim);}
+.upload-area{border:2px dashed var(--border2);border-radius:16px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:18px;}
+.upload-area:hover{border-color:var(--red);}
+.upload-icon{font-size:36px;margin-bottom:8px;}
+.upload-text{font-size:13px;color:var(--text2);}
+.success-anim{text-align:center;padding:20px 0;}
+.success-icon{font-size:64px;animation:successPop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes successPop{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0deg)}}
+.success-title{font-size:20px;font-weight:800;color:var(--text);margin:12px 0 6px;}
+.success-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+.xp-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--amber),#FF8C00);border-radius:16px;padding:8px 18px;margin:14px auto 0;font-size:14px;font-weight:800;color:#fff;box-shadow:0 4px 16px rgba(255,171,0,.35);}
+.confirm-btn{width:100%;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;border:none;border-radius:var(--btn-r);padding:16px;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .15s;font-family:'Outfit',sans-serif;letter-spacing:.3px;box-shadow:0 6px 24px var(--red-glow);}
+.confirm-btn:disabled{opacity:.4;cursor:not-allowed;}
+.secondary-btn{width:100%;background:var(--bg4);color:var(--text2);border:1.5px solid var(--border2);border-radius:var(--btn-r);padding:13px;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px;font-family:'Outfit',sans-serif;transition:all .2s;}
+.toast{position:absolute;top:68px;left:50%;transform:translateX(-50%);z-index:50;background:rgba(30,32,48,.98);border:1px solid var(--border2);border-radius:14px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;backdrop-filter:blur(12px);animation:toastIn .3s ease,toastOut .3s ease 2.3s forwards;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0}}
+.comm-header{padding:16px 16px 12px;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.comm-tabs{display:flex;gap:4px;background:var(--bg3);border-radius:14px;padding:4px;}
+.comm-tab{flex:1;text-align:center;padding:8px;border-radius:10px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;}
+.comm-tab.on{background:var(--red);color:#fff;box-shadow:0 2px 10px var(--red-glow);}
+.comm-card{margin:10px 16px 0;background:var(--bg3);border:1px solid var(--border);border-radius:var(--card-r);overflow:hidden;cursor:pointer;transition:border-color .2s;}
+.comm-card:last-child{margin-bottom:100px;}
+.comm-card:hover{border-color:var(--border2);}
+.comm-card-img{height:130px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;overflow:hidden;}
+.comm-img-grad{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,11,18,.9));}
+.comm-card-body{padding:12px 14px 14px;}
+.comm-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.comm-card-meta{font-size:11px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.comm-card-footer{display:flex;align-items:center;gap:8px;}
+.comm-vote-area{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.comm-action{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--border2);font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;background:var(--bg4);transition:all .2s;font-family:'Outfit',sans-serif;}
+.comm-action:hover,.comm-action.on{border-color:var(--red);color:var(--red);background:var(--red-glow);}
+.status-badge{border-radius:8px;padding:4px 10px;font-size:10px;font-weight:800;letter-spacing:.5px;}
+.comment-preview{background:var(--bg4);border-radius:10px;padding:10px 12px;margin-top:10px;border-left:3px solid var(--border2);}
+.comment-author{font-size:10px;font-weight:700;color:var(--text2);margin-bottom:3px;}
+.comment-text{font-size:12px;color:var(--text);line-height:1.4;}
+.ach-header{padding:20px 20px 16px;background:var(--bg);}
+.ach-hero{background:var(--bg3);border:1px solid var(--border);border-radius:var(--card-r);padding:20px;display:flex;align-items:center;gap:16px;margin-bottom:16px;position:relative;overflow:hidden;}
+.ach-hero::after{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;background:radial-gradient(var(--red-glow),transparent 70%);border-radius:50%;}
+.ach-avatar{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--red),var(--red2));display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;box-shadow:0 8px 24px var(--red-glow);}
+.ach-name{font-size:17px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.ach-rank{font-size:12px;color:var(--red);font-weight:700;margin-bottom:8px;}
+.xp-bar-wrap{display:flex;align-items:center;gap:8px;}
+.xp-bar-bg{flex:1;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;}
+.xp-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--red),var(--amber));transition:width .8s cubic-bezier(.34,1.56,.64,1);}
+.xp-label{font-size:10px;color:var(--text2);white-space:nowrap;}
+.badge-section-title{padding:0 20px 10px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;}
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px 20px;}
+.badge-card{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden;transition:border-color .2s;cursor:pointer;}
+.badge-card.locked{opacity:.5;}
+.badge-card:hover:not(.locked){border-color:var(--border2);}
+.badge-icon{font-size:32px;line-height:1;}
+.badge-name{font-size:10px;font-weight:700;color:var(--text);text-align:center;line-height:1.3;}
+.badge-prog{width:100%;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.badge-prog-fill{height:100%;border-radius:2px;}
+.badge-lock{position:absolute;top:6px;right:6px;font-size:10px;opacity:.6;}
+.badge-new{position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:8px;font-weight:800;border-radius:4px;padding:2px 5px;letter-spacing:.3px;}
+.ach-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 16px;}
+.ach-stat{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px;}
+.ach-stat-n{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
+.ach-stat-l{font-size:11px;color:var(--text2);margin-top:2px;}
+.profile-header{padding:24px 20px 20px;background:var(--bg2);border-bottom:1px solid var(--border);text-align:center;}
+.profile-avatar{width:76px;height:76px;border-radius:24px;background:linear-gradient(135deg,var(--red),var(--red2));display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;box-shadow:0 8px 32px var(--red-glow);}
+.profile-name{font-size:20px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.profile-handle{font-size:13px;color:var(--text2);margin-bottom:12px;}
+.profile-tags{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+.profile-tag{border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border);}
+.profile-stat{background:var(--bg);padding:16px 8px;text-align:center;}
+.profile-stat-n{font-size:22px;font-weight:800;color:var(--text);}
+.profile-stat-l{font-size:10px;color:var(--text2);margin-top:2px;}
+.setting-group{padding:0 16px;margin-top:16px;}
+.setting-group-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-left:4px;}
+.setting-item{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;}
+.setting-item:hover{border-color:var(--border2);}
+.setting-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.setting-label{font-size:13.5px;font-weight:600;color:var(--text);flex:1;}
+.setting-value{font-size:12px;color:var(--text2);}
+.setting-arrow{color:var(--text3);font-size:14px;}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--border2);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.toggle.on{background:var(--red);}
+.toggle-thumb{position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+.toggle.on .toggle-thumb{transform:translateX(18px);}
+.history-item{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.history-icon{font-size:22px;flex-shrink:0;}
+.history-body{flex:1;min-width:0;}
+.history-title{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.history-meta{font-size:10px;color:var(--text2);}
+.history-xp{font-size:12px;font-weight:700;color:var(--amber);}
+.pb100{padding-bottom:100px;}
+.mt8{margin-top:8px;}
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="statusbar">
+    <span>9:41</span>
+    <div class="notch"><div class="notch-cam"></div></div>
+    <div class="statusbar-icons">
+      <div class="bar" style="height:8px"></div><div class="bar" style="height:11px"></div>
+      <div class="bar" style="height:14px"></div><div class="bar" style="height:11px"></div>
+      <span style="font-size:11px">📶</span><span style="font-size:11px">🔋</span>
+    </div>
+  </div>
+  <div class="scroll" id="scroll">
+
+    <!-- HOME -->
+    <div class="page active" id="pg-home">
+      <div class="topnav">
+        <div class="app-logo"><div class="logo-mark">💣</div><div class="logo-name">路口<em>排雷</em></div></div>
+        <div class="score-pill" onclick="showToast('⚡ 你的排雷積分')">⚡ <span id="score-disp">1,290</span></div>
+      </div>
+      <div class="filter-wrap">
+        <div class="chip on" onclick="setChip(this)">全部</div>
+        <div class="chip" onclick="setChip(this)">🕳️ 坑洞</div>
+        <div class="chip" onclick="setChip(this)">🚦 標線</div>
+        <div class="chip" onclick="setChip(this)">🚧 違停</div>
+        <div class="chip" onclick="setChip(this)">⚠️ 路口</div>
+        <div class="chip" onclick="setChip(this)">💡 路燈</div>
+        <div class="chip" onclick="setChip(this)">🌊 積水</div>
+      </div>
+      <div class="map-wrap">
+  <div id="realMap" style="position:absolute; inset:0; z-index:1;"></div>
+
+  <div class="map-tools" style="z-index:10;">
+    <div class="map-btn" id="btn-locate">🎯</div>
+    <div class="map-btn" id="btn-style">🗺️</div>
+    <div class="map-btn" id="btn-measure">📏</div>
+  </div>
+  <div class="map-scale" style="z-index:10;"><div class="scale-bar"></div><span class="scale-label">500m</span></div>
+  <div class="map-fade-top" style="z-index:5;"></div>
+  <div class="map-fade-bot" style="z-index:5;"></div>
+</div>
+      <div class="sec"><span class="sec-title">📍 附近排雷點</span><span class="sec-more" onclick="showToast('載入更多...')">查看全部</span></div>
+      <div class="hazard-list pb100">
+        <div class="hcard" data-hazard-id="h1" data-hazard-type="🚦" data-lat="22.7634" data-lng="120.3637"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--red);border-radius:18px 0 0 18px;"></div><div class="hcard-icon" style="background:rgba(255,59,78,.12);">🚦</div><div class="hcard-body"><div class="hcard-title">燕巢校區前道路標線嚴重褪色</div><div class="hcard-loc">📍 高雄市燕巢區大學路 · <strong style="color:var(--text)">0.3km</strong></div><div class="hcard-footer"><span class="tag" style="background:rgba(255,59,78,.15);color:#FF6B6B;">🚦 標線不清</span><span class="tag" style="background:rgba(255,59,78,.08);color:var(--red);">🔥 嚴重</span><button class="vote-btn" onclick="vote(this,event)">👍 48</button></div></div></div>
+        <div class="hcard" data-hazard-id="h2" data-hazard-type="⚠️" data-lat="22.7610" data-lng="120.3660"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--amber);border-radius:18px 0 0 18px;"></div><div class="hcard-icon" style="background:rgba(255,171,0,.12);">⚠️</div><div class="hcard-body"><div class="hcard-title">燕巢大學路口待轉區視野遮蔽</div><div class="hcard-loc">📍 高雄市燕巢區大學路 · <strong style="color:var(--text)">1.2km</strong></div><div class="hcard-footer"><span class="tag" style="background:rgba(255,171,0,.15);color:var(--amber);">⚠️ 危險路口</span><span class="tag" style="background:rgba(255,171,0,.08);color:#FFD080;">⚡ 中度</span><button class="vote-btn" onclick="vote(this,event)">👍 31</button></div></div></div>
+        <div class="hcard" data-hazard-id="h3" data-hazard-type="🚧" data-lat="22.7660" data-lng="120.3610"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--purple);border-radius:18px 0 0 18px;"></div><div class="hcard-icon" style="background:var(--purple-dim);">🚧</div><div class="hcard-body"><div class="hcard-title">燕巢中民路口長期違停嚴重阻礙</div><div class="hcard-loc">📍 高雄市燕巢區中民路 · <strong style="color:var(--text)">2.1km</strong></div><div class="hcard-footer"><span class="tag" style="background:var(--purple-dim);color:var(--purple);">🚧 違停佔道</span><span class="tag" style="background:rgba(167,139,250,.08);color:#C3B9FF;">🟡 待審核</span><button class="vote-btn" onclick="vote(this,event)">👍 9</button></div></div></div>
+        <div class="hcard" data-hazard-id="h4" data-hazard-type="🕳️" data-lat="22.7625" data-lng="120.3600"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green);border-radius:18px 0 0 18px;"></div><div class="hcard-icon" style="background:var(--green-dim);">✅</div><div class="hcard-body"><div class="hcard-title">燕巢大學路段路面坑洞已完成修復</div><div class="hcard-loc">📍 高雄市燕巢區大學路 · <strong style="color:var(--text)">3.7km</strong></div><div class="hcard-footer"><span class="tag" style="background:var(--green-dim);color:var(--green);">🕳️ 路面坑洞</span><span class="tag" style="background:rgba(0,230,118,.06);color:#7EFFC0;">✅ 已修復</span><button class="vote-btn" onclick="vote(this,event)">👍 62</button></div></div></div>
+        <div class="hcard" data-hazard-id="h5" data-hazard-type="🕳️" data-lat="22.7645" data-lng="120.3648"><div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue);border-radius:18px 0 0 18px;"></div><div class="hcard-icon" style="background:var(--blue-dim);">🕳️</div><div class="hcard-body"><div class="hcard-title">燕巢校區周邊自行車道多處連環坑洞</div><div class="hcard-loc">📍 高雄市燕巢區大學路 · <strong style="color:var(--text)">4.2km</strong></div><div class="hcard-footer"><span class="tag" style="background:var(--blue-dim);color:var(--blue);">🕳️ 路面坑洞</span><span class="tag" style="background:rgba(61,142,255,.08);color:#8ABFFF;">⚡ 中度</span><button class="vote-btn" onclick="vote(this,event)">👍 24</button></div></div></div>
+      </div>
+    </div>
+
+    <!-- COMMUNITY -->
+    <div class="page" id="pg-comm">
+      <div class="topnav"><div class="app-logo"><div class="logo-mark">💣</div><div class="logo-name">社群<em>附議</em></div></div><div class="score-pill">🔥 熱門</div></div>
+      <div class="comm-header"><div class="comm-tabs"><div class="comm-tab on" data-comm-tab="latest" onclick="commTab(this)">最新上報</div><div class="comm-tab" data-comm-tab="pending" onclick="commTab(this)">待附議</div><div class="comm-tab" data-comm-tab="fixed" onclick="commTab(this)">已修復</div></div></div>
+      <div id="comm-list" style="padding-bottom:100px;"></div>
+    </div>
+
+    <!-- ACHIEVEMENT -->
+    <div class="page" id="pg-ach">
+      <div class="ach-header">
+        <div class="ach-hero"><div class="ach-avatar">🦺</div><div style="flex:1;min-width:0;"><div class="ach-name">道路守護者</div><div class="ach-rank">⭐ 黃金排雷師 · Lv.7</div><div class="xp-bar-wrap"><div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-bar" style="width:68%;"></div></div><span class="xp-label">1,290 / 1,900 XP</span></div></div></div>
+        <div class="ach-stats"><div class="ach-stat"><div class="ach-stat-n" style="color:var(--red);">23</div><div class="ach-stat-l">我的排雷點</div></div><div class="ach-stat"><div class="ach-stat-n" style="color:var(--green);">8</div><div class="ach-stat-l">成功修復</div></div><div class="ach-stat"><div class="ach-stat-n" style="color:var(--amber);">147</div><div class="ach-stat-l">收到附議</div></div><div class="ach-stat"><div class="ach-stat-n" style="color:var(--blue);">312</div><div class="ach-stat-l">幫助附議</div></div></div>
+      </div>
+      <div class="badge-section-title" style="padding-top:16px;">🏅 已解鎖徽章</div>
+      <div class="badge-grid">
+        <div class="badge-card" onclick="showToast('🎖️ 初心排雷者：完成第一次回報')"><div style="background:linear-gradient(135deg,#FFAB00,#FF8C00);border-radius:12px;padding:8px;"><div class="badge-icon">🔰</div></div><div class="badge-name">初心排雷者</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--amber);"></div></div><div class="badge-new">NEW</div></div>
+        <div class="badge-card" onclick="showToast('🎖️ 社區英雄：回報10個缺陷')"><div style="background:linear-gradient(135deg,#3D8EFF,#1565C0);border-radius:12px;padding:8px;"><div class="badge-icon">🦸</div></div><div class="badge-name">社區英雄</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--blue);"></div></div></div>
+        <div class="badge-card" onclick="showToast('🎖️ 熱心市民：收到50次附議')"><div style="background:linear-gradient(135deg,#00E676,#00897B);border-radius:12px;padding:8px;"><div class="badge-icon">🌟</div></div><div class="badge-name">熱心市民</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--green);"></div></div></div>
+        <div class="badge-card" onclick="showToast('🎖️ 夜間守護者：夜間回報5次')"><div style="background:linear-gradient(135deg,#A78BFA,#6D28D9);border-radius:12px;padding:8px;"><div class="badge-icon">🌙</div></div><div class="badge-name">夜間守護者</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--purple);"></div></div></div>
+        <div class="badge-card" onclick="showToast('🎖️ 修路功臣：1個缺陷成功修復')"><div style="background:linear-gradient(135deg,#FF3B4E,#FF6B35);border-radius:12px;padding:8px;"><div class="badge-icon">🔨</div></div><div class="badge-name">修路功臣</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--red);"></div></div></div>
+        <div class="badge-card" onclick="showToast('🎖️ 黃金眼：回報被核實10次')"><div style="background:linear-gradient(135deg,#F59E0B,#B45309);border-radius:12px;padding:8px;"><div class="badge-icon">👁️</div></div><div class="badge-name">黃金眼</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:#F59E0B;"></div></div></div>
+      </div>
+      <div class="badge-section-title">🔒 尚未解鎖</div>
+      <div class="badge-grid" style="padding-bottom:100px;">
+        <div class="badge-card locked" onclick="showToast('需回報50個缺陷才能解鎖')"><div class="badge-icon">💎</div><div class="badge-name">鑽石衛士</div><div class="badge-prog"><div class="badge-prog-fill" style="width:46%;background:var(--border2);"></div></div><div class="badge-lock">🔒</div></div>
+        <div class="badge-card locked" onclick="showToast('需連續7天回報才能解鎖')"><div class="badge-icon">🔥</div><div class="badge-name">七天連燃</div><div class="badge-prog"><div class="badge-prog-fill" style="width:28%;background:var(--border2);"></div></div><div class="badge-lock">🔒</div></div>
+        <div class="badge-card locked" onclick="showToast('需5個缺陷成功修復才能解鎖')"><div class="badge-icon">🏆</div><div class="badge-name">道路救星</div><div class="badge-prog"><div class="badge-prog-fill" style="width:60%;background:var(--border2);"></div></div><div class="badge-lock">🔒</div></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="pg-profile">
+      <div class="profile-header">
+        <div class="profile-avatar">🙋</div>
+        <div class="profile-name" id="profile-name" title="點擊可編輯">道路守護者</div>
+        <div class="profile-handle" title="點擊可編輯">
+          <span id="profile-handle-at">@road_hunter_87</span> · <span id="profile-city">高雄市</span>
+        </div>
+        <div class="profile-tags" id="profile-tags" title="點擊可編輯">
+          <span class="profile-tag" style="background:rgba(255,59,78,.15);color:var(--red);">🔥 黃金排雷師</span>
+          <span class="profile-tag" style="background:rgba(255,171,0,.15);color:var(--amber);">⭐ 連續7天</span>
+          <span class="profile-tag" style="background:rgba(0,230,118,.12);color:var(--green);">✅ 已認證</span>
+        </div>
+        <div id="profile-tags-editor" class="hidden" style="margin-top:10px;">
+          <div id="profile-tags-options" style="display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
+            <button class="comm-action" id="profile-tags-save" style="padding:10px 12px;">保存</button>
+            <button class="comm-action" id="profile-tags-cancel" style="padding:10px 12px;">取消</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;">提示：最多選 3 個（只能選「已解鎖徽章」），只存本機，不會上傳。</div>
+        </div>
+      </div>
+      <div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" style="color:var(--red);">23</div><div class="profile-stat-l">排雷數</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--amber);">1,290</div><div class="profile-stat-l">積分</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--green);">8</div><div class="profile-stat-l">修復數</div></div></div>
+      <div class="setting-group" style="margin-top:16px;"><div class="setting-group-title">📋 最近活動</div>
+        <div class="history-item"><div class="history-icon">🚦</div><div class="history-body"><div class="history-title">回報：燕巢校區標線不清</div><div class="history-meta">2 小時前 · 高雄市燕巢區</div></div><div class="history-xp">+50 XP</div></div>
+        <div class="history-item"><div class="history-icon">👍</div><div class="history-body"><div class="history-title">附議：燕巢自行車道坑洞</div><div class="history-meta">5 小時前 · 高雄市燕巢區</div></div><div class="history-xp">+10 XP</div></div>
+        <div class="history-item"><div class="history-icon">🏅</div><div class="history-body"><div class="history-title">解鎖成就：夜間守護者</div><div class="history-meta">昨天 22:31</div></div><div class="history-xp">+100 XP</div></div>
+        <div class="history-item"><div class="history-icon">✅</div><div class="history-body"><div class="history-title">修復確認：信義路五段坑洞</div><div class="history-meta">3 天前</div></div><div class="history-xp">+200 XP</div></div>
+      </div>
+      <div class="setting-group" style="margin-top:16px;"><div class="setting-group-title">⚙️ 偏好設定</div>
+        <div class="setting-item"><div class="setting-icon-wrap" style="background:rgba(61,142,255,.12);">🔔</div><div class="setting-label">附近缺陷通知</div><div class="toggle on" data-pref-key="nearbyNotify" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="setting-item"><div class="setting-icon-wrap" style="background:rgba(0,230,118,.12);">📍</div><div class="setting-label">自動 GPS 定位</div><div class="toggle on" data-pref-key="autoGps" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="setting-item"><div class="setting-icon-wrap" style="background:rgba(255,171,0,.12);">🌙</div><div class="setting-label">夜間省電模式</div><div class="toggle" data-pref-key="nightSaver" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+        <div class="setting-item" onclick="showToast('🗺️ 導航整合設定')"><div class="setting-icon-wrap" style="background:rgba(167,139,250,.12);">🗺️</div><div class="setting-label">導航 APP 整合</div><span class="setting-value">Google Maps</span><span class="setting-arrow">›</span></div>
+        <div class="setting-item" onclick="showToast('📊 資料匯出功能開發中')"><div class="setting-icon-wrap" style="background:rgba(255,59,78,.12);">📊</div><div class="setting-label">匯出排雷紀錄</div><span class="setting-value">CSV / PDF</span><span class="setting-arrow">›</span></div>
+      </div>
+      <div class="setting-group" style="padding-bottom:100px;margin-top:8px;"><div class="setting-group-title">👥 帳號</div>
+        <div class="setting-item" onclick="openProfileQuickEdit()"><div class="setting-icon-wrap" style="background:rgba(61,142,255,.12);">✏️</div><div class="setting-label">編輯個人資料</div><span class="setting-arrow">›</span></div>
+        <div class="setting-item" onclick="showToast('🔒 隱私設定')"><div class="setting-icon-wrap" style="background:rgba(255,171,0,.12);">🔒</div><div class="setting-label">隱私與安全</div><span class="setting-arrow">›</span></div>
+        <div class="setting-item" onclick="showToast('登出確認')"><div class="setting-icon-wrap" style="background:rgba(255,59,78,.12);">🚪</div><div class="setting-label" style="color:var(--red);">登出</div><span class="setting-arrow" style="color:var(--red);">›</span></div>
+      </div>
+    </div>
+  </div><!-- scroll -->
+
+  <!-- FAB -->
+  <div class="fab-wrap" id="fab-wrap"><button class="fab" onclick="openModal()"><span style="font-size:20px;">📍</span> + 快速排雷</button></div>
+
+  <!-- Bottom tab -->
+  <div class="bottom-tab">
+    <div class="tab-item on" id="tab-home" onclick="switchTab('home')"><div class="tab-icon-wrap"><div class="tab-icon">🗺️</div></div><div class="tab-label">首頁地圖</div></div>
+    <div class="tab-item" id="tab-comm" onclick="switchTab('comm')"><div class="tab-icon-wrap"><div class="tab-icon">💬</div><span class="tab-badge">5</span></div><div class="tab-label">社群附議</div></div>
+    <div class="tab-item" id="tab-ach" onclick="switchTab('ach')"><div class="tab-icon-wrap"><div class="tab-icon">🏅</div><span class="tab-dot"></span></div><div class="tab-label">成就徽章</div></div>
+    <div class="tab-item" id="tab-profile" onclick="switchTab('profile')"><div class="tab-icon-wrap"><div class="tab-icon">👤</div></div><div class="tab-label">個人設定</div></div>
+  </div>
+  <div class="modal-bg hidden" id="photo-modal-bg" style="z-index: 60; justify-content: center; align-items: center;" onclick="this.classList.add('hidden')">
+    <div style="background: var(--bg2); padding: 18px; border-radius: 20px; width: 85%; max-width: 340px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+      <div id="photo-modal-title" style="font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 12px; line-height: 1.4;"></div>
+      <img id="photo-modal-img" src="" style="width: 100%; border-radius: 12px; max-height: 50vh; object-fit: cover; background: var(--bg4);" />
+      <button class="confirm-btn" style="margin-top: 16px; padding: 12px;" onclick="document.getElementById('photo-modal-bg').classList.add('hidden')">關閉</button>
+    </div>
+  </div>
+  <!-- Modal -->
+  <div class="modal-bg hidden" id="modal-bg" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div id="modal-step1">
+        <div class="modal-title">📍 回報缺陷</div>
+        <div class="modal-subtitle">選擇缺陷類型</div>
+        <div class="steps"><div class="step-dot on"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+        <div class="cat-grid">
+          <button class="cat-btn" onclick="selCat(this)"><span>🕳️</span><span>路面坑洞</span></button>
+          <button class="cat-btn" onclick="selCat(this)"><span>🚦</span><span>標線不清</span></button>
+          <button class="cat-btn" onclick="selCat(this)"><span>🚧</span><span>違停佔道</span></button>
+          <button class="cat-btn" onclick="selCat(this)"><span>⚠️</span><span>危險路口</span></button>
+          <button class="cat-btn" onclick="selCat(this)"><span>💡</span><span>路燈故障</span></button>
+          <button class="cat-btn" onclick="selCat(this)"><span>🌊</span><span>積水淹水</span></button>
+        </div>
+        <button class="confirm-btn" id="next1-btn" onclick="goStep(2)" disabled>下一步：嚴重程度 →</button>
+      </div>
+      <div id="modal-step2" class="hidden">
+        <div class="modal-title">📸 拍照與評分</div>
+        <div class="steps"><div class="step-dot done"></div><div class="step-dot on"></div><div class="step-dot"></div></div>
+        <div class="sev-wrap"><div class="sev-label"><span>嚴重程度</span><span id="sev-text" style="color:var(--amber);font-weight:700;">請選擇</span></div><div class="sev-dots"><div class="sev-dot" onclick="selSev(this,1)">😐</div><div class="sev-dot" onclick="selSev(this,2)">😟</div><div class="sev-dot" onclick="selSev(this,3)">😰</div><div class="sev-dot" onclick="selSev(this,4)">😱</div><div class="sev-dot" onclick="selSev(this,5)">💀</div></div></div>
+        <input id="photo-input" type="file" accept="image/*" capture="environment" class="hidden"/>
+        <div class="upload-area" onclick="triggerPhoto()"><div class="upload-icon">📷</div><div class="upload-text" id="upload-text">點擊拍照或上傳圖片</div><div style="font-size:10px;color:var(--text3);margin-top:4px;">支援 JPG、PNG · 最大 10MB</div></div>
+        <div id="photo-preview-wrap" class="hidden" style="margin-top:12px;">
+          <div style="font-size:11px;color:var(--text2);font-weight:700;margin:0 2px 8px;">預覽</div>
+          <img id="photo-preview" alt="照片預覽" style="width:100%;max-height:180px;object-fit:cover;border-radius:16px;border:1px solid var(--border);background:var(--bg4);"/>
+        </div>
+        <button class="confirm-btn" id="next2-btn" disabled>確認定位並上傳 →</button>
+        <button class="secondary-btn" onclick="goStep(1)">← 上一步</button>
+      </div>
+      <div id="modal-step3" class="hidden">
+        <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot on"></div></div>
+        <div id="photo-proof-wrap" class="hidden" style="margin:10px 0 6px;">
+          <img id="photo-proof" alt="回報照片" style="width:100%;max-height:220px;object-fit:cover;border-radius:18px;border:1px solid var(--border);background:var(--bg4);"/>
+        </div>
+        <div id="report-assigned" class="hidden" style="margin:8px 0 2px;font-size:12px;color:var(--text2);text-align:center;font-weight:700;"></div>
+        <div class="success-anim"><div class="success-icon">🎉</div><div class="success-title">排雷成功！</div><div class="success-sub">感謝你讓道路更安全。<br/>你的回報已進入審核佇列，<br/>等待社群附議核實！</div><div class="xp-badge">⚡ 獲得 +50 XP！</div></div>
+        <button class="confirm-btn" style="margin-top:20px;" onclick="closeModalBtn()">太棒了！</button>
+      </div>
+    </div>
+  </div>
+</div><!-- phone -->
+
+<script>
+// ====== 真實地圖初始化 ======
+// 座標設定在高雄燕巢區（對應你的假資料）
+const map = L.map('realMap', {
+  zoomControl: false, // 隱藏預設的放大縮小按鈕，保持介面乾淨
+  attributionControl: false // 隱藏版權文字，讓畫面更像原生 App
+}).setView([22.7634, 120.3637], 15);
+
+// 載入底圖：預設使用較亮的 Positron（避免地圖過黑），並可用 🗺️ 切換深色底圖
+const baseLayers = {
+  light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 })
+};
+let currentBase = 'light';
+baseLayers[currentBase].addTo(map);
+
+// 建立一個函數，用來把你的漂亮 CSS 大頭針轉換成 Leaflet 的標記
+function createCustomPin(emoji, color1, color2, label) {
+  return L.divIcon({
+    className: 'custom-leaflet-pin',
+    html: `
+      <div class="pin" style="position:relative; pointer-events:auto;">
+        <div class="pulse" style="border-color:${color1};"></div>
+        <div class="pin-body" style="background:linear-gradient(135deg,${color1},${color2}); margin:0 auto;">
+          <span>${emoji}</span>
+        </div>
+        <div class="pin-label">${label}</div>
+      </div>
+    `,
+    iconSize: [80, 80],
+    iconAnchor: [40, 60] // 確保大頭針尖端對準真實的經緯度
+  });
+}
+
+// 排雷點資料（用來讓篩選與清單互動可同步運作）
+const hazards = [
+  { id: 'h1', type: '🚦', title: '燕巢校區前道路標線嚴重褪色', label: '標線不清', emoji: '🚦', lat: 22.7634, lng: 120.3637, colors: ['#FF3B4E', '#FF6B35'] },
+  { id: 'h2', type: '⚠️', title: '燕巢大學路口待轉區視野遮蔽', label: '危險待轉', emoji: '⚠️', lat: 22.7610, lng: 120.3660, colors: ['#FFAB00', '#FF8C00'] },
+  { id: 'h3', type: '🚧', title: '燕巢中民路口長期違停嚴重阻礙', label: '違停佔道', emoji: '🚧', lat: 22.7660, lng: 120.3610, colors: ['#A78BFA', '#6D28D9'] },
+  { id: 'h4', type: '🕳️', title: '燕巢大學路段路面坑洞已完成修復', label: '已修復', emoji: '✅', lat: 22.7625, lng: 120.3600, colors: ['#00E676', '#00BFA5'] },
+  { id: 'h5', type: '🕳️', title: '燕巢校區周邊自行車道多處連環坑洞', label: '路面坑洞', emoji: '🕳️', lat: 22.7645, lng: 120.3648, colors: ['#3D8EFF', '#1565C0'] }
+];
+
+const markersById = {};
+hazards.forEach(h => {
+  const m = L.marker([h.lat, h.lng], {
+    icon: createCustomPin(h.emoji, h.colors[0], h.colors[1], h.label)
+  }).addTo(map);
+  m.on('click', () => focusHazardById(h.id)); // <-- 新增這行
+  markersById[h.id] = m;
+});
+
+let locationMarker = null;
+let measureMode = false;
+let measurePoints = [];
+let measureLine = null;
+let measureDots = [];
+
+function toggleBaseLayer() {
+  const next = currentBase === 'light' ? 'dark' : 'light';
+  map.removeLayer(baseLayers[currentBase]);
+  currentBase = next;
+  baseLayers[currentBase].addTo(map);
+  showToast(currentBase === 'light' ? '🗺️ 已切換：亮色地圖' : '🗺️ 已切換：深色地圖');
+}
+
+function locateMe() {
+  if (!navigator.geolocation) {
+    showToast('此瀏覽器不支援定位');
+    return;
+  }
+  showToast('🎯 定位中...');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      map.setView([lat, lng], 16, { animate: true });
+      if (locationMarker) map.removeLayer(locationMarker);
+      locationMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'my-location-icon',
+          html: '<div class="my-loc"><div class="loc-dot"></div></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(map);
+      showToast('🎯 已定位到你的位置');
+    },
+    err => {
+      const msg = err && err.code === 1 ? '定位權限被拒絕' : '定位失敗，請稍後重試';
+      showToast('🎯 ' + msg);
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+  );
+}
+
+function resetMeasure() {
+  measurePoints = [];
+  if (measureLine) { map.removeLayer(measureLine); measureLine = null; }
+  measureDots.forEach(d => map.removeLayer(d));
+  measureDots = [];
+}
+
+function toggleMeasureMode() {
+  measureMode = !measureMode;
+  resetMeasure();
+  showToast(measureMode ? '📏 測距：點兩下地圖量距離' : '📏 已關閉測距');
+}
+
+function haversineMeters(a, b) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLng / 2) ** 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+map.on('click', e => {
+  if (!measureMode) return;
+  if (measurePoints.length >= 2) resetMeasure();
+  measurePoints.push(e.latlng);
+  const dot = L.circleMarker(e.latlng, { radius: 5, color: '#FFFFFF', weight: 2, fillColor: '#FFFFFF', fillOpacity: 0.35 });
+  dot.addTo(map);
+  measureDots.push(dot);
+  if (measurePoints.length === 2) {
+    measureLine = L.polyline(measurePoints, { color: '#FFFFFF', weight: 2, opacity: 0.7 }).addTo(map);
+    const d = haversineMeters(measurePoints[0], measurePoints[1]);
+    const text = d < 1000 ? `${Math.round(d)}m` : `${(d / 1000).toFixed(2)}km`;
+    showToast('📏 距離：' + text);
+  }
+});
+
+function focusHazardById(id) {
+  const h = hazards.find(x => x.id === id);
+  if (!h) return;
+  
+  // 1. 移動地圖
+  map.setView([h.lat, h.lng], 16, { animate: true });
+  showToast('📍 ' + h.label);
+
+  // 2. 如果該點有照片，就呼叫剛剛寫的彈出視窗
+  if (h.photoUrl) {
+    const modal = document.getElementById('photo-modal-bg');
+    const img = document.getElementById('photo-modal-img');
+    const title = document.getElementById('photo-modal-title');
+    if (modal && img && title) {
+      title.textContent = h.title;
+      img.src = h.photoUrl;
+      modal.classList.remove('hidden');
+    }
+  }
+}
+
+function applyFilter(type) {
+  // markers
+  hazards.forEach(h => {
+    const m = markersById[h.id];
+    if (!m) return;
+    const shouldShow = !type || h.type === type;
+    const onMap = map.hasLayer(m);
+    if (shouldShow && !onMap) m.addTo(map);
+    if (!shouldShow && onMap) map.removeLayer(m);
+  });
+
+  // cards
+  const cards = document.querySelectorAll('.hcard[data-hazard-type]');
+  let shown = 0;
+  cards.forEach(c => {
+    const shouldShow = !type || c.dataset.hazardType === type;
+    c.style.display = shouldShow ? '' : 'none';
+    if (shouldShow) shown++;
+  });
+  if (type && shown === 0) showToast('目前沒有符合的排雷點');
+}
+
+// 綁定：地圖工具
+document.getElementById('btn-style').addEventListener('click', toggleBaseLayer);
+document.getElementById('btn-locate').addEventListener('click', locateMe);
+document.getElementById('btn-measure').addEventListener('click', toggleMeasureMode);
+
+// 綁定：清單點擊 → 定位
+document.querySelectorAll('.hcard[data-hazard-id]').forEach(card => {
+  card.addEventListener('click', () => focusHazardById(card.dataset.hazardId));
+});
+
+function switchTab(id){
+  ['home','comm','ach','profile'].forEach(t=>{
+    document.getElementById('pg-'+t).classList.remove('active');
+    document.getElementById('tab-'+t).classList.remove('on');
+  });
+  document.getElementById('pg-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('on');
+  document.getElementById('fab-wrap').style.display=(id==='home')?'':'none';
+  document.getElementById('scroll').scrollTop=0;
+  if(id==='home') setTimeout(()=>map.invalidateSize(),50);
+}
+function setChip(el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  const txt=(el.textContent||'').trim();
+  const type=(txt==='全部')?null:txt.split(' ')[0];
+  applyFilter(type);
+}
+function commTab(el){
+  document.querySelectorAll('.comm-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  commActiveTab = el.dataset.commTab || 'latest';
+  renderCommunity();
+}
+function vote(btn,e){
+  e.stopPropagation();
+  if(btn.classList.contains('voted')){showToast('你已附議過這個排雷點');return;}
+  btn.classList.add('voted','vote-pop');
+  const n=parseInt(btn.textContent.replace('👍','').trim());
+  btn.textContent='👍 '+(n+1);
+  addScore(10);showToast('✅ 附議成功！+10 XP');
+  setTimeout(()=>btn.classList.remove('vote-pop'),300);
+}
+function commVote(btn,e){
+  e.stopPropagation();
+  if(btn.classList.contains('on')){showToast('你已附議過這篇回報');return;}
+  btn.classList.add('on');
+  const m=btn.innerHTML.match(/(\d+)/);
+  if(m)btn.innerHTML=btn.innerHTML.replace(m[0],parseInt(m[0])+1);
+  addScore(10);showToast('✅ 附議成功！+10 XP');
+}
+
+// ====== 社群附議（本機動態資料） ======
+let commActiveTab = 'latest';
+const communityPosts = [];
+const communityPostById = {};
+const COMMUNITY_FIXED_VOTES = 5; // 本機 demo：附議達 5 視為「已修復」
+const commCommentBoxOpen = {};
+
+function seedCommunityDemoPosts(){
+  if (communityPosts.length > 0) return;
+  const now = Date.now();
+
+  const seed = [
+    {
+      id: `seed_${now}_1`,
+      hazardId: 'h1',
+      typeEmoji: '🚦',
+      label: '標線不清',
+      title: '燕巢校區前道路標線嚴重褪色，夜間行車高風險',
+      createdAt: now - 2 * 60 * 60 * 1000,
+      votes: 4,
+      comments: [
+        { author: 'bike_patrol_tpe', text: '這路段我每天騎，真的很危險！附議！', at: now - 45 * 60 * 1000 }
+      ]
+    },
+    {
+      id: `seed_${now}_4`,
+      hazardId: 'h2',
+      typeEmoji: '⚠️',
+      label: '危險路口',
+      title: '燕巢大學路口待轉區視野遮蔽，雨天更危險',
+      createdAt: now - 70 * 60 * 1000,
+      votes: 1,
+      comments: [
+        { author: 'commuter_kh', text: '早上尖峰真的看不到機車，拜託改善。', at: now - 55 * 60 * 1000 }
+      ]
+    },
+    {
+      id: `seed_${now}_2`,
+      hazardId: 'h5',
+      typeEmoji: '🕳️',
+      label: '路面坑洞',
+      title: '燕巢校區周邊自行車道多處連環坑洞，已有車友摔車',
+      createdAt: now - 5 * 60 * 60 * 1000,
+      votes: 2,
+      comments: [
+        { author: '安全騎士', text: '已通報區公所，希望大家多附議加速處理！', at: now - 60 * 60 * 1000 }
+      ]
+    },
+    {
+      id: `seed_${now}_5`,
+      hazardId: 'h3',
+      typeEmoji: '🚧',
+      label: '違停佔道',
+      title: '燕巢中民路口長期違停阻礙視線，轉彎非常危險',
+      createdAt: now - 9 * 60 * 60 * 1000,
+      votes: 3,
+      comments: [
+        { author: 'yanchao_rider', text: '每天都停一整排，救護車也不好過。', at: now - 8 * 60 * 60 * 1000 }
+      ]
+    },
+    {
+      id: `seed_${now}_3`,
+      hazardId: 'h4',
+      typeEmoji: '🕳️',
+      label: '修復完成',
+      title: '【修復成功】燕巢大學路段路面坑洞已完成修補',
+      createdAt: now - 3 * 24 * 60 * 60 * 1000,
+      votes: 9,
+      comments: [
+        { author: '區公所', text: '感謝市民回報，本案已完成修補，請持續回報！', at: now - 2 * 24 * 60 * 60 * 1000 }
+      ]
+    },
+    {
+      id: `seed_${now}_6`,
+      hazardId: 'h1',
+      typeEmoji: '🚦',
+      label: '標線不清',
+      title: '【已處理】校區前人行穿越線已重新補漆',
+      createdAt: now - 6 * 24 * 60 * 60 * 1000,
+      votes: 6,
+      comments: [
+        { author: 'campus_guard', text: '今天看到施工車，應該有改善。', at: now - 5 * 24 * 60 * 60 * 1000 }
+      ]
+    }
+  ];
+
+  seed.forEach(p => {
+    communityPosts.push(p);
+    communityPostById[p.id] = p;
+  });
+}
+
+function timeAgoText(ts) {
+  const t = typeof ts === 'number' ? ts : Date.now();
+  const delta = Math.max(0, Date.now() - t);
+  const m = Math.floor(delta / 60000);
+  if (m < 1) return '剛剛';
+  if (m < 60) return `${m} 分前`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} 小時前`;
+  const d = Math.floor(h / 24);
+  return `${d} 天前`;
+}
+
+function postStatus(post) {
+  return post.votes >= COMMUNITY_FIXED_VOTES ? 'fixed' : 'pending';
+}
+
+function renderCommunity() {
+  const host = document.getElementById('comm-list');
+  if (!host) return;
+
+  seedCommunityDemoPosts();
+
+  const list = communityPosts
+    .slice()
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .filter(p => {
+      if (commActiveTab === 'latest') return true;
+      return postStatus(p) === commActiveTab;
+    });
+
+  if (list.length === 0) {
+    const label = commActiveTab === 'fixed' ? '已修復' : (commActiveTab === 'pending' ? '待附議' : '最新上報');
+    host.innerHTML = `
+      <div style="padding:18px 16px 0;">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--card-r);padding:16px;">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:6px;">目前沒有「${label}」的回報</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.5;">回到首頁按「+ 快速排雷」建立新排雷點，這裡就會出現可附議、可留言的社群貼文。</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  host.innerHTML = '';
+  list.forEach(post => {
+    const h = hazards.find(x => x.id === post.hazardId);
+    const reporterName = post && post.isMine ? getProfileDisplayName() : (post && post.reporterName ? post.reporterName : '社群回報');
+    const isFixed = postStatus(post) === 'fixed';
+    const badgeText = isFixed ? '✅ 已修復' : '⏳ 等待附議';
+    const badgeBg = isFixed ? 'rgba(0,230,118,.2)' : 'rgba(255,171,0,.2)';
+    const badgeColor = isFixed ? 'var(--green)' : 'var(--amber)';
+    const g1 = (h && h.colors && h.colors[0]) ? h.colors[0] : 'var(--red)';
+    const g2 = (h && h.colors && h.colors[1]) ? h.colors[1] : 'var(--red2)';
+    const title = post.title;
+    const tagText = `${post.typeEmoji} ${post.label}`;
+    const recentComments = post.comments.slice(-3);
+    const isCommentOpen = !!commCommentBoxOpen[post.id];
+
+    const card = document.createElement('div');
+    card.className = 'comm-card';
+    card.dataset.postId = post.id;
+    card.innerHTML = `
+      <div class="comm-card-img" style="background:linear-gradient(135deg,${g1},${g2});">
+        <span>${escapeHtml(post.typeEmoji)}</span>
+        <div class="comm-img-grad"></div>
+        <div style="position:absolute;bottom:8px;left:10px;z-index:2;">
+          <span class="status-badge" style="background:${badgeBg};color:${badgeColor};">${badgeText}</span>
+        </div>
+      </div>
+      <div class="comm-card-body">
+        <div class="comm-card-title">${escapeHtml(title)}</div>
+        <div class="comm-card-meta">
+          <span>👤 ${escapeHtml(reporterName)}</span><span>·</span><span>${timeAgoText(post.createdAt)}</span><span>·</span><span>💬 ${post.comments.length} 則</span>
+        </div>
+        <div class="comm-card-footer">
+          <span class="tag" style="background:var(--bg4);color:var(--text2);">${escapeHtml(tagText)}</span>
+          <div class="comm-vote-area">
+            <button class="comm-action" data-action="vote">👍 附議 <strong>${post.votes}</strong></button>
+            <button class="comm-action" data-action="toggleComment">💬 留言</button>
+          </div>
+        </div>
+        ${recentComments.length ? `
+          <div style="margin-top:10px;">
+            ${recentComments.map((c, idx) => `
+              <div class="comment-preview${idx === 0 ? ' mt8' : ''}">
+                <div class="comment-author">${escapeHtml(c.author)} · ${timeAgoText(c.at)}</div>
+                <div class="comment-text">${escapeHtml(c.text)}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <div class="mt8" data-comment-box style="display:${isCommentOpen ? '' : 'none'};">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input data-comment-input type="text" placeholder="留言一下…" style="flex:1;min-width:0;background:var(--bg4);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:12px;outline:none;" />
+            <button class="comm-action" data-action="submitComment" style="padding:10px 12px;">送出</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;">提示：這是本機示範留言，不會上傳。</div>
+        </div>
+      </div>
+    `;
+    host.appendChild(card);
+  });
+}
+
+function addCommunityPostFromReport(hazard) {
+  const id = `p${Date.now()}`;
+  const label = hazard.label || '新回報';
+  const title = `${hazard.title || '新排雷點'}（GPS 建立）`;
+  const post = {
+    id,
+    hazardId: hazard.id,
+    isMine: true,
+    reporterName: getProfileDisplayName(),
+    typeEmoji: hazard.type,
+    label,
+    title,
+    createdAt: Date.now(),
+    votes: 0,
+    comments: []
+  };
+  communityPosts.unshift(post);
+  communityPostById[id] = post;
+  renderCommunity();
+}
+
+const commHost = document.getElementById('comm-list');
+if (commHost) {
+  commHost.addEventListener('click', (e) => {
+    const card = e.target.closest('.comm-card');
+    if (!card) return;
+    const postId = card.dataset.postId;
+    const post = postId ? communityPostById[postId] : null;
+    if (!post) return;
+
+    const actionBtn = e.target.closest('.comm-action');
+    if (actionBtn) {
+      e.stopPropagation();
+      const action = actionBtn.dataset.action;
+      if (action === 'vote') {
+        post.votes += 1;
+        addScore(10);
+        showToast('✅ 附議成功！+10 XP');
+        renderCommunity();
+        return;
+      }
+      if (action === 'toggleComment') {
+        commCommentBoxOpen[post.id] = !commCommentBoxOpen[post.id];
+        renderCommunity();
+        return;
+      }
+      if (action === 'submitComment') {
+        const input = card.querySelector('[data-comment-input]');
+        const text = (input && input.value ? input.value : '').trim();
+        if (!text) {
+          showToast('請輸入留言內容');
+          return;
+        }
+        post.comments.push({ author: getProfileDisplayName(), text, at: Date.now() });
+        commCommentBoxOpen[post.id] = true;
+        showToast('💬 已送出留言');
+        renderCommunity();
+        return;
+      }
+    }
+
+    // 只在點到「圖片區」才跳回地圖定位，避免留言輸入時誤跳轉
+    const imgArea = e.target.closest('.comm-card-img');
+    if (!imgArea) return;
+
+    switchTab('home');
+    focusHazardById(post.hazardId);
+  });
+}
+let score=1290;
+function addScore(n){
+  score+=n;
+  document.getElementById('score-disp').textContent=score.toLocaleString();
+  const xpEl=document.getElementById('xp-bar');
+  if(xpEl){const pct=Math.min(100,68+(score-1290)/6);xpEl.style.width=pct+'%';}
+}
+function openModal(){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('sel'));
+  document.querySelectorAll('.sev-dot').forEach(d=>d.classList.remove('sel'));
+  document.getElementById('sev-text').textContent='請選擇';
+  document.getElementById('next1-btn').disabled=true;
+  document.getElementById('next2-btn').disabled=true;
+  window.selectedCategory = null;
+  window.selectedSeverity = null;
+  window.selectedPhotoFile = null;
+  const txt = document.getElementById('upload-text');
+  if (txt) txt.textContent = '點擊拍照或上傳圖片';
+  clearPhotoPreview();
+  const assigned = document.getElementById('report-assigned');
+  if (assigned) { assigned.textContent = ''; assigned.classList.add('hidden'); }
+  goStep(1);
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-bg'))return;document.getElementById('modal-bg').classList.add('hidden');}
+function closeModalBtn(){document.getElementById('modal-bg').classList.add('hidden');}
+function goStep(n){[1,2,3].forEach(i=>document.getElementById('modal-step'+i).classList.add('hidden'));document.getElementById('modal-step'+n).classList.remove('hidden');if(n===3){addScore(50);showToast('🎉 排雷回報成功！+50 XP');}}
+function selCat(el){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  const emoji = (el.querySelector('span')?.textContent || '').trim();
+  const label = (el.querySelectorAll('span')[1]?.textContent || '').trim();
+  window.selectedCategory = { emoji, label };
+  document.getElementById('next1-btn').disabled=false;
+}
+const sevLabels=['','輕微','一般','中度','嚴重','緊急💀'];
+function selSev(el,v){
+  document.querySelectorAll('.sev-dot').forEach(d=>d.classList.remove('sel'));
+  el.classList.add('sel');
+  window.selectedSeverity = v;
+  document.getElementById('sev-text').textContent=sevLabels[v];
+  updateUploadReadyState();
+}
+let toastTimer=null;
+function showToast(msg){
+  const old=document.querySelector('.toast');if(old)old.remove();
+  if(toastTimer)clearTimeout(toastTimer);
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.getElementById('phone').appendChild(t);
+  toastTimer=setTimeout(()=>{if(t.parentNode)t.parentNode.removeChild(t);},2700);
+}
+
+// ====== 個人資料（本機保存 + 就地編輯） ======
+const PROFILE_STORAGE_KEY = 'lukou_pailei_profile_v1';
+const PREF_STORAGE_KEY = 'lukou_pailei_prefs_v1';
+const MAX_PROFILE_TAGS = 3;
+
+function safeJsonParse(s, fallback){
+  try { return JSON.parse(s); } catch { return fallback; }
+}
+
+function loadProfileState(){
+  const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+  const stored = raw ? safeJsonParse(raw, null) : null;
+  const defaults = {
+    name: '道路守護者',
+    handle: '@road_hunter_87',
+    city: '高雄市',
+    tags: ['🔥 黃金排雷師', '⭐ 連續7天', '✅ 已認證']
+  };
+  const merged = Object.assign({}, defaults, stored || {});
+  if (Array.isArray(merged.tags)) merged.tags = merged.tags.slice(0, MAX_PROFILE_TAGS);
+  return merged;
+}
+
+function saveProfileState(next){
+  try {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
+function getEarnedTagOptions(){
+  const options = [];
+  const pushUnique = (text) => {
+    const t = String(text || '').trim();
+    if (!t) return;
+    if (options.some(o => o.text === t)) return;
+    options.push({ text: t });
+  };
+
+  // 這三個視為「已獲得」的基本標籤（與 UI 現況一致）
+  ['🔥 黃金排雷師', '⭐ 連續7天', '✅ 已認證'].forEach(pushUnique);
+
+  // 從成就頁「已解鎖徽章」讀取（排除 locked）
+  document.querySelectorAll('#pg-ach .badge-card:not(.locked)').forEach(card => {
+    const icon = (card.querySelector('.badge-icon')?.textContent || '').trim();
+    const name = (card.querySelector('.badge-name')?.textContent || '').trim();
+    const text = `${icon} ${name}`.trim();
+    pushUnique(text);
+  });
+
+  return options;
+}
+
+function tagStyleForText(t){
+  const s = String(t || '').trim();
+  if (s.startsWith('🔥')) return { bg: 'rgba(255,59,78,.15)', color: 'var(--red)' };
+  if (s.startsWith('⭐')) return { bg: 'rgba(255,171,0,.15)', color: 'var(--amber)' };
+  if (s.startsWith('✅')) return { bg: 'rgba(0,230,118,.12)', color: 'var(--green)' };
+  if (s.startsWith('🔰')) return { bg: 'rgba(255,171,0,.15)', color: 'var(--amber)' };
+  if (s.startsWith('🦸')) return { bg: 'rgba(61,142,255,.12)', color: 'var(--blue)' };
+  if (s.startsWith('🌟')) return { bg: 'rgba(0,230,118,.12)', color: 'var(--green)' };
+  if (s.startsWith('🌙')) return { bg: 'rgba(167,139,250,.12)', color: 'var(--purple)' };
+  if (s.startsWith('🔨')) return { bg: 'rgba(255,59,78,.15)', color: 'var(--red)' };
+  if (s.startsWith('👁️')) return { bg: 'rgba(255,171,0,.15)', color: 'var(--amber)' };
+  return { bg: 'var(--bg4)', color: 'var(--text2)' };
+}
+
+function renderProfileTagOptions(selectedSet){
+  const host = document.getElementById('profile-tags-options');
+  if (!host) return;
+  host.innerHTML = '';
+
+  const options = getEarnedTagOptions();
+  options.forEach(opt => {
+    const text = opt.text;
+    const st = tagStyleForText(text);
+    const chip = document.createElement('span');
+    chip.className = 'profile-tag';
+    chip.style.background = st.bg;
+    chip.style.color = st.color;
+    chip.style.border = `1.5px solid ${selectedSet.has(text) ? 'var(--red)' : 'var(--border2)'}`;
+    chip.style.cursor = 'pointer';
+    chip.textContent = text;
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (selectedSet.has(text)) selectedSet.delete(text);
+      else {
+        if (selectedSet.size >= MAX_PROFILE_TAGS) { showToast(`最多選 ${MAX_PROFILE_TAGS} 個標籤`); return; }
+        selectedSet.add(text);
+      }
+      renderProfileTagOptions(selectedSet);
+    });
+    host.appendChild(chip);
+  });
+}
+
+function applyProfileState(state){
+  const nameEl = document.getElementById('profile-name');
+  const handleEl = document.getElementById('profile-handle-at');
+  const cityEl = document.getElementById('profile-city');
+  const tagsEl = document.getElementById('profile-tags');
+  if (nameEl) nameEl.textContent = state.name || '';
+  if (handleEl) handleEl.textContent = state.handle || '';
+  if (cityEl) cityEl.textContent = state.city || '';
+  if (tagsEl) {
+    tagsEl.innerHTML = '';
+    (state.tags || []).forEach(t => {
+      const st = tagStyleForText(t);
+      const span = document.createElement('span');
+      span.className = 'profile-tag';
+      span.style.background = st.bg;
+      span.style.color = st.color;
+      span.textContent = t;
+      tagsEl.appendChild(span);
+    });
+  }
+}
+
+function getProfileDisplayName(){
+  const state = loadProfileState();
+  return state.name || '你';
+}
+
+function startInlineEditText(el, getValue, setValue, validate){
+  if (!el) return;
+  const prev = getValue();
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = prev;
+  input.style.width = '100%';
+  input.style.maxWidth = '320px';
+  input.style.background = 'var(--bg3)';
+  input.style.border = '1.5px solid var(--border2)';
+  input.style.borderRadius = '12px';
+  input.style.padding = '10px 12px';
+  input.style.color = 'var(--text)';
+  input.style.fontSize = '13px';
+  input.style.outline = 'none';
+  input.style.textAlign = 'center';
+
+  const wrap = document.createElement('span');
+  wrap.style.display = 'inline-flex';
+  wrap.style.justifyContent = 'center';
+  wrap.style.gap = '8px';
+  wrap.style.alignItems = 'center';
+  wrap.style.flexWrap = 'wrap';
+  wrap.style.width = '100%';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'comm-action';
+  saveBtn.textContent = '保存';
+  saveBtn.style.padding = '10px 12px';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'comm-action';
+  cancelBtn.textContent = '取消';
+  cancelBtn.style.padding = '10px 12px';
+
+  const originalHtml = el.innerHTML;
+  el.innerHTML = '';
+  wrap.appendChild(input);
+  wrap.appendChild(saveBtn);
+  wrap.appendChild(cancelBtn);
+  el.appendChild(wrap);
+
+  const finish = (shouldSave) => {
+    if (shouldSave) {
+      const next = (input.value || '').trim();
+      if (validate && !validate(next)) {
+        showToast('格式不正確');
+        return;
+      }
+      setValue(next);
+      showToast('✅ 已保存');
+    }
+    el.innerHTML = originalHtml;
+    applyProfileState(loadProfileState());
+  };
+
+  saveBtn.addEventListener('click', (e) => { e.stopPropagation(); finish(true); });
+  cancelBtn.addEventListener('click', (e) => { e.stopPropagation(); finish(false); });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 0);
+}
+
+function setupProfileEditing(){
+  const nameEl = document.getElementById('profile-name');
+  const handleEl = document.getElementById('profile-handle-at');
+  const cityEl = document.getElementById('profile-city');
+  const tagsEl = document.getElementById('profile-tags');
+  const editor = document.getElementById('profile-tags-editor');
+  const tagsOptionsHost = document.getElementById('profile-tags-options');
+  const tagsSave = document.getElementById('profile-tags-save');
+  const tagsCancel = document.getElementById('profile-tags-cancel');
+
+  if (nameEl) {
+    nameEl.style.cursor = 'pointer';
+    nameEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startInlineEditText(nameEl, () => loadProfileState().name, (v) => {
+        const s = loadProfileState();
+        s.name = v || '道路守護者';
+        saveProfileState(s);
+      }, (v) => v.length >= 1 && v.length <= 20);
+    });
+  }
+
+  if (handleEl) {
+    handleEl.style.cursor = 'pointer';
+    handleEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startInlineEditText(handleEl, () => loadProfileState().handle, (v) => {
+        const s = loadProfileState();
+        s.handle = v.startsWith('@') ? v : ('@' + v);
+        saveProfileState(s);
+      }, (v) => v.length >= 1 && v.length <= 24);
+    });
+  }
+
+  if (cityEl) {
+    cityEl.style.cursor = 'pointer';
+    cityEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startInlineEditText(cityEl, () => loadProfileState().city, (v) => {
+        const s = loadProfileState();
+        s.city = v || '高雄市';
+        saveProfileState(s);
+      }, (v) => v.length >= 1 && v.length <= 20);
+    });
+  }
+
+  if (tagsEl && editor && tagsOptionsHost && tagsSave && tagsCancel) {
+    tagsEl.style.cursor = 'pointer';
+
+    let selectedTags = new Set();
+
+    tagsEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const s = loadProfileState();
+      const opts = getEarnedTagOptions().map(o => o.text);
+      const allowed = new Set(opts);
+      const next = (s.tags || []).filter(t => allowed.has(t)).slice(0, MAX_PROFILE_TAGS);
+      const fallback = ['🔥 黃金排雷師', '⭐ 連續7天', '✅ 已認證'].filter(t => allowed.has(t)).slice(0, MAX_PROFILE_TAGS);
+      selectedTags = new Set(next.length ? next : fallback);
+      renderProfileTagOptions(selectedTags);
+      editor.classList.remove('hidden');
+    });
+
+    editor.addEventListener('click', (e) => e.stopPropagation());
+
+    const closeEditor = () => editor.classList.add('hidden');
+
+    tagsSave.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const s = loadProfileState();
+      s.tags = Array.from(selectedTags).slice(0, MAX_PROFILE_TAGS);
+      saveProfileState(s);
+      applyProfileState(s);
+      showToast('✅ 已保存標籤');
+      closeEditor();
+    });
+    tagsCancel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeEditor();
+    });
+  }
+
+  document.getElementById('pg-profile')?.addEventListener('click', () => {
+    editor?.classList.add('hidden');
+  });
+}
+
+function loadPrefs(){
+  const raw = localStorage.getItem(PREF_STORAGE_KEY);
+  const stored = raw ? safeJsonParse(raw, {}) : {};
+  return Object.assign({ nearbyNotify: true, autoGps: true, nightSaver: false }, stored);
+}
+
+function savePrefs(next){
+  try {
+    localStorage.setItem(PREF_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
+function applyPrefs(){
+  const prefs = loadPrefs();
+  document.querySelectorAll('.toggle[data-pref-key]').forEach(t => {
+    const key = t.dataset.prefKey;
+    const on = !!prefs[key];
+    t.classList.toggle('on', on);
+  });
+}
+
+function openProfileQuickEdit(){
+  switchTab('profile');
+  showToast('✏️ 點名字/帳號/城市/標籤即可編輯');
+  const nameEl = document.getElementById('profile-name');
+  if (nameEl) {
+    nameEl.scrollIntoView({ block: 'center' });
+    // 直接觸發一次編輯
+    nameEl.click();
+  }
+}
+
+// 覆寫 toggleSwitch：加入本機保存
+function toggleSwitch(el){
+  el.classList.toggle('on');
+  const key = el.dataset.prefKey;
+  if (key) {
+    const prefs = loadPrefs();
+    prefs[key] = el.classList.contains('on');
+    savePrefs(prefs);
+  }
+  showToast(el.classList.contains('on') ? '已開啟' : '已關閉');
+}
+
+// ====== 相機/相簿上傳（手機可直接開相機） ======
+window.selectedCategory = null;
+window.selectedSeverity = null;
+window.selectedPhotoFile = null;
+window.isUploading = false;
+let previewObjectUrl = null;
+
+function clearPhotoPreview(){
+  const wrap = document.getElementById('photo-preview-wrap');
+  const img = document.getElementById('photo-preview');
+  const proofWrap = document.getElementById('photo-proof-wrap');
+  const proof = document.getElementById('photo-proof');
+  if (wrap) wrap.classList.add('hidden');
+  if (img) img.removeAttribute('src');
+  if (proofWrap) proofWrap.classList.add('hidden');
+  if (proof) proof.removeAttribute('src');
+  if (previewObjectUrl) {
+    URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = null;
+  }
+}
+
+function setPhotoPreview(file){
+  clearPhotoPreview();
+  previewObjectUrl = URL.createObjectURL(file);
+  const wrap = document.getElementById('photo-preview-wrap');
+  const img = document.getElementById('photo-preview');
+  if (wrap && img) {
+    img.src = previewObjectUrl;
+    wrap.classList.remove('hidden');
+  }
+  const proofWrap = document.getElementById('photo-proof-wrap');
+  const proof = document.getElementById('photo-proof');
+  if (proofWrap && proof) {
+    proof.src = previewObjectUrl;
+    proofWrap.classList.remove('hidden');
+  }
+}
+
+function updateUploadReadyState(){
+  const btn = document.getElementById('next2-btn');
+  if (!btn) return;
+  const ok = !!window.selectedSeverity && !!window.selectedPhotoFile;
+  btn.disabled = !ok;
+}
+
+function formatDistance(meters){
+  if (!Number.isFinite(meters)) return '';
+  if (meters < 1000) return `${Math.round(meters)}m`;
+  return `${(meters / 1000).toFixed(2)}km`;
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function getTypeVisuals(type){
+  switch (type) {
+    case '🚦':
+      return {
+        stripe: 'var(--red)',
+        iconBg: 'rgba(255,59,78,.12)',
+        catTagBg: 'rgba(255,59,78,.15)',
+        catTagColor: '#FF6B6B'
+      };
+    case '⚠️':
+      return {
+        stripe: 'var(--amber)',
+        iconBg: 'rgba(255,171,0,.12)',
+        catTagBg: 'rgba(255,171,0,.15)',
+        catTagColor: 'var(--amber)'
+      };
+    case '🚧':
+      return {
+        stripe: 'var(--purple)',
+        iconBg: 'var(--purple-dim)',
+        catTagBg: 'var(--purple-dim)',
+        catTagColor: 'var(--purple)'
+      };
+    case '🕳️':
+      return {
+        stripe: 'var(--blue)',
+        iconBg: 'var(--blue-dim)',
+        catTagBg: 'var(--blue-dim)',
+        catTagColor: 'var(--blue)'
+      };
+    case '💡':
+      return {
+        stripe: 'var(--amber)',
+        iconBg: 'var(--amber-dim)',
+        catTagBg: 'rgba(255,171,0,.15)',
+        catTagColor: 'var(--amber)'
+      };
+    case '🌊':
+      return {
+        stripe: 'var(--blue)',
+        iconBg: 'var(--blue-dim)',
+        catTagBg: 'var(--blue-dim)',
+        catTagColor: 'var(--blue)'
+      };
+    default:
+      return {
+        stripe: 'var(--border2)',
+        iconBg: 'var(--bg4)',
+        catTagBg: 'var(--bg4)',
+        catTagColor: 'var(--text2)'
+      };
+  }
+}
+
+function addHazardMarker(h){
+  const m = L.marker([h.lat, h.lng], {
+    icon: createCustomPin(h.emoji, h.colors[0], h.colors[1], h.label)
+  }).addTo(map);
+  m.on('click', () => focusHazardById(h.id)); // <-- 新增這行
+  markersById[h.id] = m;
+  return m;
+}
+
+function addHazardCardToList(h){
+  const list = document.querySelector('.hazard-list');
+  if (!list) return;
+  const v = getTypeVisuals(h.type);
+  const sevText = window.selectedSeverity ? (sevLabels[window.selectedSeverity] || '已回報') : '已回報';
+
+  const card = document.createElement('div');
+  card.className = 'hcard';
+  card.dataset.hazardId = h.id;
+  card.dataset.hazardType = h.type;
+  card.dataset.lat = String(h.lat);
+  card.dataset.lng = String(h.lng);
+  card.innerHTML =
+    `<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${v.stripe};border-radius:18px 0 0 18px;"></div>` +
+    `<div class="hcard-icon" style="background:${v.iconBg};">${escapeHtml(h.emoji)}</div>` +
+    `<div class="hcard-body">` +
+      `<div class="hcard-title">${escapeHtml(h.title)}</div>` +
+      `<div class="hcard-loc">📍 你的定位回報 · <strong style="color:var(--text)">0m</strong></div>` +
+      `<div class="hcard-footer">` +
+        `<span class="tag" style="background:${v.catTagBg};color:${v.catTagColor};">${escapeHtml(h.type)} ${escapeHtml(h.label)}</span>` +
+        `<span class="tag" style="background:rgba(255,171,0,.08);color:#FFD080;">⚡ ${escapeHtml(sevText)}</span>` +
+        `<button class="vote-btn" onclick="vote(this,event)">👍 0</button>` +
+      `</div>` +
+    `</div>`;
+
+  card.addEventListener('click', () => focusHazardById(card.dataset.hazardId));
+  list.insertBefore(card, list.firstChild);
+}
+
+function createNewHazardFromReport(lat, lng){
+  const cat = window.selectedCategory;
+  const type = (cat && cat.emoji) ? cat.emoji : '⚠️';
+  const label = (cat && cat.label) ? cat.label : '新回報';
+  const sample = hazards.find(x => x.type === type) || hazards[0];
+  const colors = (sample && Array.isArray(sample.colors) && sample.colors.length >= 2)
+    ? [sample.colors[0], sample.colors[1]]
+    : ['#FF3B4E', '#FF6B35'];
+
+  const id = `u${Date.now()}`;
+  const title = `【新回報】${label}`;
+  return {
+    id,
+    type,
+    title,
+    label,
+    emoji: type,
+    lat,
+    lng,
+    colors
+  };
+}
+
+function getCurrentPositionAsync(options){
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('geolocation_not_supported'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+}
+
+function findNearestHazard(lat, lng){
+  if (!Array.isArray(hazards) || hazards.length === 0) return null;
+  const here = { lat, lng };
+  let nearest = null;
+  let best = Infinity;
+  hazards.forEach(h => {
+    const d = haversineMeters(here, { lat: h.lat, lng: h.lng });
+    if (d < best) {
+      best = d;
+      nearest = { hazard: h, meters: d };
+    }
+  });
+  return nearest;
+}
+
+const localReportCountsByHazardId = {};
+
+function bumpLocalReportBadge(hazardId){
+  localReportCountsByHazardId[hazardId] = (localReportCountsByHazardId[hazardId] || 0) + 1;
+  const card = document.querySelector(`.hcard[data-hazard-id="${hazardId}"]`);
+  if (!card) return;
+  const footer = card.querySelector('.hcard-footer');
+  if (!footer) return;
+
+  let tag = footer.querySelector(`span[data-report-badge="${hazardId}"]`);
+  if (!tag) {
+    tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.dataset.reportBadge = hazardId;
+    tag.style.background = 'var(--blue-dim)';
+    tag.style.color = 'var(--blue)';
+    const voteBtn = footer.querySelector('.vote-btn');
+    if (voteBtn) footer.insertBefore(tag, voteBtn);
+    else footer.appendChild(tag);
+  }
+  tag.textContent = `🧾 回報 +${localReportCountsByHazardId[hazardId]}`;
+}
+
+function triggerPhoto(){
+  const input = document.getElementById('photo-input');
+  if(!input){showToast('📷 相機元件載入失敗');return;}
+  input.value='';
+  input.click();
+}
+
+const photoInput = document.getElementById('photo-input');
+if (photoInput) {
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files && photoInput.files[0];
+    if (!file) return;
+    window.selectedPhotoFile = file;
+    const txt = document.getElementById('upload-text');
+    if (txt) txt.textContent = '已選擇照片 ✅';
+    showToast('📷 已選擇照片');
+    setPhotoPreview(file);
+    updateUploadReadyState();
+  });
+}
+
+function submitLocalReport(){
+  if (!window.selectedSeverity) {
+    showToast('請先選擇嚴重程度');
+    return;
+  }
+  if (!window.selectedPhotoFile) {
+    showToast('請先選擇照片');
+    return;
+  }
+  if (window.isUploading) return;
+  window.isUploading = true;
+  const btn = document.getElementById('next2-btn');
+  if (btn) btn.disabled = true;
+
+  showToast('📍 取得定位並上傳至伺服器...');
+  getCurrentPositionAsync({ enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 })
+    .then(async pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      // 畫出我的位置圖示
+      if (locationMarker) map.removeLayer(locationMarker);
+      locationMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'my-location-icon',
+          html: '<div class="my-loc"><div class="loc-dot"></div></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(map);
+
+      try {
+        // --- 1. 真實上傳照片 ---
+        const formData = new FormData();
+        formData.append('photo', window.selectedPhotoFile);
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+        const uploadData = await uploadRes.json();
+        const photoUrl = uploadData.ok ? uploadData.url : null;
+
+        // --- 2. 準備回報資料並寫入 SQLite 資料庫 ---
+        const cat = window.selectedCategory;
+        const typeEmoji = (cat && cat.emoji) ? cat.emoji : '⚠️';
+        const label = (cat && cat.label) ? cat.label : '新回報';
+        const sample = hazards.find(x => x.type === typeEmoji) || hazards[0];
+        const colors = (sample && Array.isArray(sample.colors) && sample.colors.length >= 2)
+          ? [sample.colors[0], sample.colors[1]]
+          : ['#FF3B4E', '#FF6B35'];
+
+        const reportRes = await fetch('/api/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hazard: { type: typeEmoji, label: label, lat: lat, lng: lng, colors: colors },
+            post: { photoUrl: photoUrl } // 這裡會把上傳好的照片路徑存進貼文裡
+          })
+        });
+        const reportData = await reportRes.json();
+
+        // --- 3. 把伺服器建立好的排雷點更新到畫面上 ---
+        if(reportData.ok) {
+          const h = reportData.hazard;
+          h.photoUrl = photoUrl;
+          hazards.unshift(h);
+          addHazardMarker(h);
+          addHazardCardToList(h);
+          bumpLocalReportBadge(h.id);
+          addCommunityPostFromReport(h); // 先保留本地假貼文的生成，讓畫面流暢
+
+          const assigned = document.getElementById('report-assigned');
+          if (assigned) {
+            assigned.textContent = `📍 已建立新排雷點：${h.label}（成功寫入資料庫✅）`;
+            assigned.classList.remove('hidden');
+          }
+
+          map.setView([h.lat, h.lng], 16, { animate: true });
+          goStep(3);
+        }
+      } catch(apiErr) {
+        console.error(apiErr);
+        showToast('伺服器連線失敗，請確認 npm start 有執行');
+      }
+    })
+    .catch(err => {
+      const code = err && typeof err.code === 'number' ? err.code : null;
+      if (code === 1) showToast('請允許定位權限，才能建立新排雷點');
+      else showToast('定位失敗，請稍後再試');
+    })
+    .finally(() => {
+      window.isUploading = false;
+      updateUploadReadyState();
+    });
+}
+
+const next2Btn = document.getElementById('next2-btn');
+if (next2Btn) {
+  next2Btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    submitLocalReport();
+  });
+}
+
+// 初始渲染一次（避免空白）
+renderCommunity();
+
+// Profile / Prefs 初始化
+applyProfileState(loadProfileState());
+setupProfileEditing();
+applyPrefs();
+// ====== 網頁開啟時，向後端要所有真實的排雷點 ======
+// ====== 網頁開啟時，向後端要所有真實的排雷點 ======
+async function loadRealData() {
+  try {
+    const res = await fetch('/api/state');
+    const data = await res.json();
+
+    // 建立一個字典：從 posts 中找出每個 hazardId 對應的 photoUrl
+    const photoMap = {};
+    if (data.posts) {
+      data.posts.forEach(p => {
+        if (p.photoUrl) photoMap[p.hazardId] = p.photoUrl;
+      });
+    }
+
+    // 讀取伺服器上的 hazards 並畫到地圖上
+    if (data.hazards && data.hazards.length > 0) {
+      data.hazards.reverse().forEach(h => {
+        // 如果有配對到照片，就把網址綁上去
+        if (photoMap[h.id]) h.photoUrl = photoMap[h.id];
+
+        if (!hazards.find(x => x.id === h.id)) {
+          hazards.unshift(h); 
+          addHazardMarker(h); 
+          addHazardCardToList(h); 
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('目前為離線模式，無法連接到 Node.js 後端', e);
+  }
+}
+loadRealData();
+</script>
+
+
+<script>
+// ====== PWA：註冊 Service Worker（符合可安裝條件） ======
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    } catch (e) {
+      // 註冊失敗不影響頁面功能
+      console.warn('SW register failed', e);
+    }
+  });
+}
+</script>
+</body></html>
