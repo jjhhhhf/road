@@ -190,7 +190,6 @@ html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;ali
 .badge-prog{width:100%;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
 .badge-prog-fill{height:100%;border-radius:2px;}
 .badge-lock{position:absolute;top:6px;right:6px;font-size:10px;opacity:.6;}
-.badge-new{position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:8px;font-weight:800;border-radius:4px;padding:2px 5px;letter-spacing:.3px;}
 .ach-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 16px;}
 .ach-stat{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px;}
 .ach-stat-n{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
@@ -231,7 +230,7 @@ html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;ali
 <body>
 <div class="phone" id="phone">
   <div class="statusbar">
-    <span>9:41</span>
+    <span id="status-time">9:41</span>
     <div class="notch"><div class="notch-cam"></div></div>
     <div class="statusbar-icons">
       <div class="bar" style="height:8px"></div><div class="bar" style="height:11px"></div>
@@ -289,11 +288,11 @@ html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;ali
     <div class="page" id="pg-ach">
       <div class="ach-header">
         <div class="ach-hero"><div class="ach-avatar">🦺</div><div style="flex:1;min-width:0;"><div class="ach-name">道路守護者</div><div class="ach-rank">⭐ 黃金排雷師 · Lv.7</div><div class="xp-bar-wrap"><div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-bar" style="width:68%;"></div></div><span class="xp-label">1,290 / 1,900 XP</span></div></div></div>
-        <div class="ach-stats"><div class="ach-stat"><div class="ach-stat-n" style="color:var(--red);">23</div><div class="ach-stat-l">我的排雷點</div></div><div class="ach-stat"><div class="ach-stat-n" style="color:var(--green);">8</div><div class="ach-stat-l">成功修復</div></div><div class="ach-stat"><div class="ach-stat-n" style="color:var(--amber);">147</div><div class="ach-stat-l">收到附議</div></div><div class="ach-stat"><div class="ach-stat-n" style="color:var(--blue);">312</div><div class="ach-stat-l">幫助附議</div></div></div>
+        <div class="ach-stats"><div class="ach-stat"><div class="ach-stat-n" id="ach-my-hazards" style="color:var(--red);">23</div><div class="ach-stat-l">我的排雷點</div></div><div class="ach-stat"><div class="ach-stat-n" id="ach-my-fixed" style="color:var(--green);">8</div><div class="ach-stat-l">成功修復</div></div><div class="ach-stat"><div class="ach-stat-n" id="ach-received-votes" style="color:var(--amber);">147</div><div class="ach-stat-l">收到附議</div></div><div class="ach-stat"><div class="ach-stat-n" id="ach-helped-votes" style="color:var(--blue);">312</div><div class="ach-stat-l">幫助附議</div></div></div>
       </div>
       <div class="badge-section-title" style="padding-top:16px;">🏅 已解鎖徽章</div>
       <div class="badge-grid">
-        <div class="badge-card" onclick="showToast('🎖️ 初心排雷者：完成第一次回報')"><div style="background:linear-gradient(135deg,#FFAB00,#FF8C00);border-radius:12px;padding:8px;"><div class="badge-icon">🔰</div></div><div class="badge-name">初心排雷者</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--amber);"></div></div><div class="badge-new">NEW</div></div>
+        <div class="badge-card" onclick="showToast('🎖️ 初心排雷者：完成第一次回報')"><div style="background:linear-gradient(135deg,#FFAB00,#FF8C00);border-radius:12px;padding:8px;"><div class="badge-icon">🔰</div></div><div class="badge-name">初心排雷者</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--amber);"></div></div></div>
         <div class="badge-card" onclick="showToast('🎖️ 社區英雄：回報10個缺陷')"><div style="background:linear-gradient(135deg,#3D8EFF,#1565C0);border-radius:12px;padding:8px;"><div class="badge-icon">🦸</div></div><div class="badge-name">社區英雄</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--blue);"></div></div></div>
         <div class="badge-card" onclick="showToast('🎖️ 熱心市民：收到50次附議')"><div style="background:linear-gradient(135deg,#00E676,#00897B);border-radius:12px;padding:8px;"><div class="badge-icon">🌟</div></div><div class="badge-name">熱心市民</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--green);"></div></div></div>
         <div class="badge-card" onclick="showToast('🎖️ 夜間守護者：夜間回報5次')"><div style="background:linear-gradient(135deg,#A78BFA,#6D28D9);border-radius:12px;padding:8px;"><div class="badge-icon">🌙</div></div><div class="badge-name">夜間守護者</div><div class="badge-prog"><div class="badge-prog-fill" style="width:100%;background:var(--purple);"></div></div></div>
@@ -327,27 +326,19 @@ html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;ali
             <button class="comm-action" id="profile-tags-save" style="padding:10px 12px;">保存</button>
             <button class="comm-action" id="profile-tags-cancel" style="padding:10px 12px;">取消</button>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:6px;">提示：最多選 3 個（只能選「已解鎖徽章」），只存本機，不會上傳。</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px;">提示：最多選 3 個（只能選「已解鎖徽章」）；登入後會同步到伺服器。</div>
         </div>
       </div>
-      <div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" style="color:var(--red);">23</div><div class="profile-stat-l">排雷數</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--amber);">1,290</div><div class="profile-stat-l">積分</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--green);">8</div><div class="profile-stat-l">修復數</div></div></div>
+      <div class="profile-stats"><div class="profile-stat"><div class="profile-stat-n" id="profile-hazards" style="color:var(--red);">23</div><div class="profile-stat-l">排雷數</div></div><div class="profile-stat"><div class="profile-stat-n" style="color:var(--amber);">1,290</div><div class="profile-stat-l">積分</div></div><div class="profile-stat"><div class="profile-stat-n" id="profile-fixed" style="color:var(--green);">8</div><div class="profile-stat-l">修復數</div></div></div>
       <div class="setting-group" style="margin-top:16px;"><div class="setting-group-title">📋 最近活動</div>
         <div class="history-item"><div class="history-icon">🚦</div><div class="history-body"><div class="history-title">回報：燕巢校區標線不清</div><div class="history-meta">2 小時前 · 高雄市燕巢區</div></div><div class="history-xp">+50 XP</div></div>
         <div class="history-item"><div class="history-icon">👍</div><div class="history-body"><div class="history-title">附議：燕巢自行車道坑洞</div><div class="history-meta">5 小時前 · 高雄市燕巢區</div></div><div class="history-xp">+10 XP</div></div>
         <div class="history-item"><div class="history-icon">🏅</div><div class="history-body"><div class="history-title">解鎖成就：夜間守護者</div><div class="history-meta">昨天 22:31</div></div><div class="history-xp">+100 XP</div></div>
         <div class="history-item"><div class="history-icon">✅</div><div class="history-body"><div class="history-title">修復確認：信義路五段坑洞</div><div class="history-meta">3 天前</div></div><div class="history-xp">+200 XP</div></div>
       </div>
-      <div class="setting-group" style="margin-top:16px;"><div class="setting-group-title">⚙️ 偏好設定</div>
-        <div class="setting-item"><div class="setting-icon-wrap" style="background:rgba(61,142,255,.12);">🔔</div><div class="setting-label">附近缺陷通知</div><div class="toggle on" data-pref-key="nearbyNotify" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
-        <div class="setting-item"><div class="setting-icon-wrap" style="background:rgba(0,230,118,.12);">📍</div><div class="setting-label">自動 GPS 定位</div><div class="toggle on" data-pref-key="autoGps" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
-        <div class="setting-item"><div class="setting-icon-wrap" style="background:rgba(255,171,0,.12);">🌙</div><div class="setting-label">夜間省電模式</div><div class="toggle" data-pref-key="nightSaver" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
-        <div class="setting-item" onclick="showToast('🗺️ 導航整合設定')"><div class="setting-icon-wrap" style="background:rgba(167,139,250,.12);">🗺️</div><div class="setting-label">導航 APP 整合</div><span class="setting-value">Google Maps</span><span class="setting-arrow">›</span></div>
-        <div class="setting-item" onclick="showToast('📊 資料匯出功能開發中')"><div class="setting-icon-wrap" style="background:rgba(255,59,78,.12);">📊</div><div class="setting-label">匯出排雷紀錄</div><span class="setting-value">CSV / PDF</span><span class="setting-arrow">›</span></div>
-      </div>
       <div class="setting-group" style="padding-bottom:100px;margin-top:8px;"><div class="setting-group-title">👥 帳號</div>
         <div class="setting-item" onclick="openProfileQuickEdit()"><div class="setting-icon-wrap" style="background:rgba(61,142,255,.12);">✏️</div><div class="setting-label">編輯個人資料</div><span class="setting-arrow">›</span></div>
-        <div class="setting-item" onclick="showToast('🔒 隱私設定')"><div class="setting-icon-wrap" style="background:rgba(255,171,0,.12);">🔒</div><div class="setting-label">隱私與安全</div><span class="setting-arrow">›</span></div>
-        <div class="setting-item" onclick="showToast('登出確認')"><div class="setting-icon-wrap" style="background:rgba(255,59,78,.12);">🚪</div><div class="setting-label" style="color:var(--red);">登出</div><span class="setting-arrow" style="color:var(--red);">›</span></div>
+        <div class="setting-item" onclick="logoutApp()"><div class="setting-icon-wrap" style="background:rgba(255,59,78,.12);">🚪</div><div class="setting-label" style="color:var(--red);">登出</div><span class="setting-arrow" style="color:var(--red);">›</span></div>
       </div>
     </div>
   </div><!-- scroll -->
@@ -358,7 +349,7 @@ html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;ali
   <!-- Bottom tab -->
   <div class="bottom-tab">
     <div class="tab-item on" id="tab-home" onclick="switchTab('home')"><div class="tab-icon-wrap"><div class="tab-icon">🗺️</div></div><div class="tab-label">首頁地圖</div></div>
-    <div class="tab-item" id="tab-comm" onclick="switchTab('comm')"><div class="tab-icon-wrap"><div class="tab-icon">💬</div><span class="tab-badge">5</span></div><div class="tab-label">社群附議</div></div>
+    <div class="tab-item" id="tab-comm" onclick="switchTab('comm')"><div class="tab-icon-wrap"><div class="tab-icon">💬</div><span class="tab-badge" id="tab-comm-badge" style="display:none;">0</span></div><div class="tab-label">社群附議</div></div>
     <div class="tab-item" id="tab-ach" onclick="switchTab('ach')"><div class="tab-icon-wrap"><div class="tab-icon">🏅</div><span class="tab-dot"></span></div><div class="tab-label">成就徽章</div></div>
     <div class="tab-item" id="tab-profile" onclick="switchTab('profile')"><div class="tab-icon-wrap"><div class="tab-icon">👤</div></div><div class="tab-label">個人設定</div></div>
   </div>
@@ -408,6 +399,28 @@ html,body{height:100%;background:#0a0a10;display:flex;justify-content:center;ali
         <div id="report-assigned" class="hidden" style="margin:8px 0 2px;font-size:12px;color:var(--text2);text-align:center;font-weight:700;"></div>
         <div class="success-anim"><div class="success-icon">🎉</div><div class="success-title">排雷成功！</div><div class="success-sub">感謝你讓道路更安全。<br/>你的回報已進入審核佇列，<br/>等待社群附議核實！</div><div class="xp-badge">⚡ 獲得 +50 XP！</div></div>
         <button class="confirm-btn" style="margin-top:20px;" onclick="closeModalBtn()">太棒了！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth (帳密登入) -->
+  <div class="modal-bg hidden" id="auth-bg" style="z-index: 80; justify-content: center; align-items: center;">
+    <div style="background: var(--bg2); padding: 18px; border-radius: 20px; width: 88%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+      <div style="font-size: 16px; font-weight: 900; color: var(--text); margin-bottom: 6px;">🔐 帳密登入</div>
+      <div style="font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 12px;">請先登入才能載入資料與使用回報/附議/留言。</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="secondary-btn" id="auth-mode-login" onclick="setAuthMode('login')" style="flex:1;">登入</button>
+        <button class="secondary-btn" id="auth-mode-register" onclick="setAuthMode('register')" style="flex:1;">註冊</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input id="auth-username" type="text" placeholder="帳號（a-z 0-9 _，3~24）" style="width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;" />
+        <input id="auth-password" type="password" placeholder="密碼（至少 6 字）" style="width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;" />
+        <input id="auth-name" type="text" placeholder="顯示名稱（選填，註冊用）" style="display:none;width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;" />
+        <input id="auth-city" type="text" placeholder="城市（選填，註冊用）" style="display:none;width:100%;background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;" />
+        <button class="confirm-btn" id="auth-submit" onclick="submitAuth()" style="margin-top:2px;">登入</button>
+        <div id="auth-msg" style="font-size: 11px; color: var(--text3); min-height: 16px;"></div>
       </div>
     </div>
   </div>
@@ -625,22 +638,71 @@ function commTab(el){
   commActiveTab = el.dataset.commTab || 'latest';
   renderCommunity();
 }
-function vote(btn,e){
+async function vote(btn,e){
   e.stopPropagation();
-  if(btn.classList.contains('voted')){showToast('你已附議過這個排雷點');return;}
-  btn.classList.add('voted','vote-pop');
-  const n=parseInt(btn.textContent.replace('👍','').trim());
-  btn.textContent='👍 '+(n+1);
-  addScore(10);showToast('✅ 附議成功！+10 XP');
-  setTimeout(()=>btn.classList.remove('vote-pop'),300);
+  const voted = btn.classList.contains('voted');
+  // update UI immediately
+  const n = parseInt(btn.textContent.replace('👍','').trim()) || 0;
+  const next = voted ? Math.max(0, n-1) : n+1;
+  btn.textContent = '👍 ' + next;
+  if (voted) {
+    btn.classList.remove('voted');
+    addScore(-10); showToast('取消附議');
+  } else {
+    btn.classList.add('voted','vote-pop');
+    addScore(10); showToast('✅ 附議成功！+10 XP');
+    setTimeout(()=>btn.classList.remove('vote-pop'),300);
+  }
+
+  // sync to community posts and server
+  try{
+    const card = btn.closest('.hcard');
+    const hazardId = card ? card.dataset.hazardId : null;
+    if (hazardId) {
+      const p = communityPosts.find(x => x && x.hazardId === hazardId);
+      if (p) {
+        if (!isSeedPostId(p.id) && serverReady) {
+          try{
+            if (voted) {
+              const res = await fetch(`/api/posts/${encodeURIComponent(p.id)}/vote`, { method: 'DELETE' });
+              const data = await res.json().catch(()=>({}));
+              if (data && data.ok) p.votes = Number(data.votes || p.votes);
+            } else {
+              const res = await fetch(`/api/posts/${encodeURIComponent(p.id)}/vote`, { method: 'POST' });
+              const data = await res.json().catch(()=>({}));
+              if (data && data.ok) p.votes = Number(data.votes || p.votes);
+            }
+          }catch(err){ console.warn('vote sync failed', err); }
+        } else {
+          p.votes = voted ? Math.max(0, Number(p.votes || 0) - 1) : (Number(p.votes || 0) + 1);
+        }
+        
+        // ★ 補上這三行：同步雙向的按讚狀態
+        p.voted = !voted; 
+        localVotedPosts[p.id] = !voted;
+        saveLocalVotedPosts();
+
+        renderCommunity();
+      }
+
+      // update helpedVotes cache
+      if (!myStatsCache) myStatsCache = { myHazards:0,myFixed:0,receivedVotes:0,helpedVotes:0,nightReports:0 };
+      myStatsCache.helpedVotes = Math.max(0, (Number(myStatsCache.helpedVotes) || 0) + (voted ? -1 : 1));
+
+      updateHazardVoteDisplay(hazardId, next);
+      refreshMyStatsUi();
+    }
+  }catch(e){console.warn(e)}
 }
 function commVote(btn,e){
   e.stopPropagation();
-  if(btn.classList.contains('on')){showToast('你已附議過這篇回報');return;}
-  btn.classList.add('on');
-  const m=btn.innerHTML.match(/(\d+)/);
-  if(m)btn.innerHTML=btn.innerHTML.replace(m[0],parseInt(m[0])+1);
-  addScore(10);showToast('✅ 附議成功！+10 XP');
+  const voted = btn.classList.contains('on');
+  const m = btn.innerHTML.match(/(\d+)/);
+  const n = m ? parseInt(m[0]) : 0;
+  const next = voted ? Math.max(0, n-1) : n+1;
+  btn.innerHTML = btn.innerHTML.replace(/(\d+)/, String(next));
+  if (voted) { btn.classList.remove('on'); addScore(-10); showToast('取消附議'); }
+  else { btn.classList.add('on'); addScore(10); showToast('✅ 附議成功！+10 XP'); }
 }
 
 // ====== 社群附議（本機動態資料） ======
@@ -649,9 +711,27 @@ const communityPosts = [];
 const communityPostById = {};
 const COMMUNITY_FIXED_VOTES = 5; // 本機 demo：附議達 5 視為「已修復」
 const commCommentBoxOpen = {};
+// 本機記錄使用者對示範貼文或離線貼文的已附議狀態（以 userId 為 key）
+let localVotedPosts = {}; // map postId -> true
+
+function loadLocalVotedPosts(){
+  try{
+    const key = 'local_voted_posts';
+    const raw = localStorage.getItem(key) || '{}';
+    localVotedPosts = JSON.parse(raw) || {};
+  }catch(e){ localVotedPosts = {}; }
+}
+
+function saveLocalVotedPosts(){
+  try{ localStorage.setItem('local_voted_posts', JSON.stringify(localVotedPosts)); }catch(e){}
+}
+
+function isSeedPostId(postId) {
+  return String(postId || '').startsWith('seed_');
+}
 
 function seedCommunityDemoPosts(){
-  if (communityPosts.length > 0) return;
+  if (communityPosts.some(p => isSeedPostId(p.id))) return;
   const now = Date.now();
 
   const seed = [
@@ -751,11 +831,24 @@ function postStatus(post) {
   return post.votes >= COMMUNITY_FIXED_VOTES ? 'fixed' : 'pending';
 }
 
+function updateCommunityBadge(){
+  const badge = document.getElementById('tab-comm-badge');
+  if (!badge) return;
+  const pendingCount = communityPosts.filter(p => postStatus(p) === 'pending').length;
+  if (pendingCount > 0) {
+    badge.style.display = '';
+    badge.textContent = pendingCount > 99 ? '99+' : String(pendingCount);
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 function renderCommunity() {
   const host = document.getElementById('comm-list');
   if (!host) return;
 
   seedCommunityDemoPosts();
+  updateCommunityBadge();
 
   const list = communityPosts
     .slice()
@@ -775,6 +868,10 @@ function renderCommunity() {
         </div>
       </div>
     `;
+    communityPosts.forEach(p => {
+    if (p.hazardId) updateHazardVoteDisplay(p.hazardId, p.votes);
+  });
+    updateCommunityBadge();
     return;
   }
 
@@ -792,6 +889,7 @@ function renderCommunity() {
     const tagText = `${post.typeEmoji} ${post.label}`;
     const recentComments = post.comments.slice(-3);
     const isCommentOpen = !!commCommentBoxOpen[post.id];
+    const showLocalTip = isSeedPostId(post.id);
 
     const card = document.createElement('div');
     card.className = 'comm-card';
@@ -809,10 +907,10 @@ function renderCommunity() {
         <div class="comm-card-meta">
           <span>👤 ${escapeHtml(reporterName)}</span><span>·</span><span>${timeAgoText(post.createdAt)}</span><span>·</span><span>💬 ${post.comments.length} 則</span>
         </div>
-        <div class="comm-card-footer">
+            <div class="comm-card-footer">
           <span class="tag" style="background:var(--bg4);color:var(--text2);">${escapeHtml(tagText)}</span>
           <div class="comm-vote-area">
-            <button class="comm-action" data-action="vote">👍 附議 <strong>${post.votes}</strong></button>
+            <button class="comm-action ${(post.voted || localVotedPosts[post.id]) ? 'on' : ''}" data-action="vote">👍 附議 <strong>${post.votes}</strong></button>
             <button class="comm-action" data-action="toggleComment">💬 留言</button>
           </div>
         </div>
@@ -831,12 +929,17 @@ function renderCommunity() {
             <input data-comment-input type="text" placeholder="留言一下…" style="flex:1;min-width:0;background:var(--bg4);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:12px;outline:none;" />
             <button class="comm-action" data-action="submitComment" style="padding:10px 12px;">送出</button>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:6px;">提示：這是本機示範留言，不會上傳。</div>
+          ${showLocalTip ? `<div style="font-size:10px;color:var(--text3);margin-top:6px;">提示：示範貼文為本機資料，不會上傳。</div>` : ''}
         </div>
       </div>
     `;
     host.appendChild(card);
   });
+  communityPosts.forEach(p => {
+    if (p.hazardId) updateHazardVoteDisplay(p.hazardId, p.votes);
+  });
+
+  updateCommunityBadge();
 }
 
 function addCommunityPostFromReport(hazard) {
@@ -862,7 +965,7 @@ function addCommunityPostFromReport(hazard) {
 
 const commHost = document.getElementById('comm-list');
 if (commHost) {
-  commHost.addEventListener('click', (e) => {
+  commHost.addEventListener('click', async (e) => {
     const card = e.target.closest('.comm-card');
     if (!card) return;
     const postId = card.dataset.postId;
@@ -874,10 +977,64 @@ if (commHost) {
       e.stopPropagation();
       const action = actionBtn.dataset.action;
       if (action === 'vote') {
-        post.votes += 1;
-        addScore(10);
-        showToast('✅ 附議成功！+10 XP');
-        renderCommunity();
+        const voted = actionBtn.classList.contains('on');
+       try {
+          const isRealServerPost = !isSeedPostId(post.id) && serverReady;
+          if (voted) {
+            // unvote
+            if (isRealServerPost) {
+              const res = await fetch(`/api/posts/${encodeURIComponent(post.id)}/vote`, { method: 'DELETE' });
+              const data = await res.json().catch(() => ({}));
+              if (data && data.ok) post.votes = Number(data.votes || post.votes);
+            } else {
+              post.votes = Math.max(0, (Number(post.votes) || 0) - 1);
+            }
+
+            // ★ 補上這三行：記錄為「未按讚」並存入本機
+            post.voted = false;
+            localVotedPosts[post.id] = false;
+            saveLocalVotedPosts();
+
+            if (!myStatsCache) myStatsCache = { myHazards: 0, myFixed: 0, receivedVotes: 0, helpedVotes: 0, nightReports: 0 };
+            myStatsCache.helpedVotes = Math.max(0, (Number(myStatsCache.helpedVotes) || 0) - 1);
+
+            addScore(-10);
+            showToast('取消附議');
+            actionBtn.classList.remove('on');
+          } else {
+            // vote
+            if (isRealServerPost) {
+              const res = await fetch(`/api/posts/${encodeURIComponent(post.id)}/vote`, { method: 'POST' });
+              const data = await res.json().catch(() => ({}));
+              if (data && data.ok) post.votes = Number(data.votes || post.votes);
+              else {
+                if (data && (data.error === 'not_logged_in' || data.error === 'session_expired')) showAuthModal();
+                throw new Error((data && data.error) || 'vote_failed');
+              }
+            } else {
+              post.votes += 1;
+            }
+
+            // ★ 補上這三行：記錄為「已按讚」並存入本機
+            post.voted = true;
+            localVotedPosts[post.id] = true;
+            saveLocalVotedPosts();
+
+            if (!myStatsCache) myStatsCache = { myHazards: 0, myFixed: 0, receivedVotes: 0, helpedVotes: 0, nightReports: 0 };
+            myStatsCache.helpedVotes = (Number(myStatsCache.helpedVotes) || 0) + 1;
+
+            addScore(10);
+            showToast('✅ 附議成功！+10 XP');
+            actionBtn.classList.add('on');
+          }
+
+          renderCommunity();
+          if (post.hazardId) updateHazardVoteDisplay(post.hazardId, post.votes);
+          refreshMyStatsUi();
+        } catch (err) {
+          showToast('伺服器連線失敗，附議未儲存');
+          console.warn(err);
+        }
         return;
       }
       if (action === 'toggleComment') {
@@ -892,10 +1049,29 @@ if (commHost) {
           showToast('請輸入留言內容');
           return;
         }
-        post.comments.push({ author: getProfileDisplayName(), text, at: Date.now() });
-        commCommentBoxOpen[post.id] = true;
-        showToast('💬 已送出留言');
-        renderCommunity();
+        try {
+          if (!isSeedPostId(post.id) && serverReady) {
+            const res = await fetch(`/api/posts/${encodeURIComponent(post.id)}/comments`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ author: getProfileDisplayName(), text })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data && data.ok && data.comment) post.comments.push(data.comment);
+            else {
+              if (data && (data.error === 'not_logged_in' || data.error === 'session_expired')) showAuthModal();
+              throw new Error((data && data.error) || 'comment_failed');
+            }
+          } else {
+            post.comments.push({ author: getProfileDisplayName(), text, at: Date.now() });
+          }
+          commCommentBoxOpen[post.id] = true;
+          showToast('💬 已送出留言');
+          renderCommunity();
+        } catch (err) {
+          showToast('伺服器連線失敗，留言未儲存');
+          console.warn(err);
+        }
         return;
       }
     }
@@ -960,17 +1136,108 @@ function showToast(msg){
   toastTimer=setTimeout(()=>{if(t.parentNode)t.parentNode.removeChild(t);},2700);
 }
 
+// ====== 成就統計（以伺服器資料為準，並支援前端即時刷新） ======
+let myStatsCache = null;
+
+const ACHIEVEMENT_RULES = [
+  { name: '初心排雷者', key: 'myHazards', goal: 1, unlockedMsg: '🎖️ 初心排雷者：完成第一次回報' },
+  { name: '社區英雄', key: 'myHazards', goal: 10, unlockedMsg: '🎖️ 社區英雄：回報10個缺陷' },
+  { name: '熱心市民', key: 'receivedVotes', goal: 50, unlockedMsg: '🎖️ 熱心市民：收到50次附議' },
+  { name: '夜間守護者', key: 'nightReports', goal: 5, unlockedMsg: '🎖️ 夜間守護者：夜間回報5次' },
+  { name: '修路功臣', key: 'myFixed', goal: 1, unlockedMsg: '🎖️ 修路功臣：1個缺陷成功修復' },
+  { name: '黃金眼', key: 'receivedVotes', goal: 10, unlockedMsg: '🎖️ 黃金眼：回報被核實10次' },
+  { name: '鑽石衛士', key: 'myHazards', goal: 50, unlockedMsg: '🎖️ 鑽石衛士：回報50個缺陷' },
+  { name: '七天連燃', key: 'nightReports', goal: 7, unlockedMsg: '🎖️ 七天連燃：夜間回報7次' },
+  { name: '道路救星', key: 'myFixed', goal: 5, unlockedMsg: '🎖️ 道路救星：5個缺陷成功修復' }
+];
+
+function getAchievementRule(name){
+  return ACHIEVEMENT_RULES.find(r => r.name === name) || null;
+}
+
+function getAchievementValue(stats, rule){
+  if (!rule || !stats) return 0;
+  return Number(stats[rule.key] || 0) || 0;
+}
+
+function getAchievementProgressText(current, goal){
+  const pct = goal > 0 ? Math.max(0, Math.min(100, (current / goal) * 100)) : 0;
+  return { pct, text: `${current}/${goal}` };
+}
+
+function setTextById(id, text){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = String(text);
+}
+
+// 將成就回復為固定顯示（不由前端動態更新）
+function applyMyStats(stats){
+  // 為了回退成就為固定顯示，不修改 DOM，僅更新快取狀態以維持相容性
+  if (!stats) return;
+  myStatsCache = Object.assign({}, stats);
+  return;
+}
+
+function wireAchievementCards(){
+  // no-op: 保持原本 badge 的靜態交互（若有 tooltip 或點擊行為，可改在 HTML 中處理）
+}
+
+function showAchievementBadge(name){
+  // 保持預設簡短提示行為（不依賴動態規則）
+  showToast(name || '成就');
+}
+
+function updateAchievementBadgeStates(stats){
+  // no-op: 不自動調整 badge 的鎖定/解鎖狀態，保留原始固定布局
+}
+
+function recomputeMyStatsFromClient(){
+  // 回退為不從客戶端重算，維持原本固定顯示
+  return null;
+}
+
+function refreshMyStatsUi(){
+  // no-op to keep badges static
+}
+
 // ====== 個人資料（本機保存 + 就地編輯） ======
-const PROFILE_STORAGE_KEY = 'lukou_pailei_profile_v1';
-const PREF_STORAGE_KEY = 'lukou_pailei_prefs_v1';
+let currentUser = null;
+const PROFILE_STORAGE_KEY_BASE = 'lukou_pailei_profile_v1';
+const PREF_STORAGE_KEY_BASE = 'lukou_pailei_prefs_v1';
+
+function profileStorageKey(){
+  return currentUser && currentUser.username ? `${PROFILE_STORAGE_KEY_BASE}_${currentUser.username}` : PROFILE_STORAGE_KEY_BASE;
+}
+
+function prefsStorageKey(){
+  return currentUser && currentUser.username ? `${PREF_STORAGE_KEY_BASE}_${currentUser.username}` : PREF_STORAGE_KEY_BASE;
+}
 const MAX_PROFILE_TAGS = 3;
+let serverReady = false;
+
+async function putJson(url, body) {
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  if (res.status === 401) {
+    serverReady = false;
+    showAuthModal();
+    throw new Error('not_logged_in');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || (data && data.error)) throw new Error((data && data.error) || 'request_failed');
+  return data;
+}
 
 function safeJsonParse(s, fallback){
   try { return JSON.parse(s); } catch { return fallback; }
 }
 
 function loadProfileState(){
-  const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+  const raw = localStorage.getItem(profileStorageKey());
   const stored = raw ? safeJsonParse(raw, null) : null;
   const defaults = {
     name: '道路守護者',
@@ -985,9 +1252,15 @@ function loadProfileState(){
 
 function saveProfileState(next){
   try {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(profileStorageKey(), JSON.stringify(next));
   } catch {
     // ignore
+  }
+
+  if (serverReady) {
+    putJson('/api/profile', next).catch(() => {
+      // ignore
+    });
   }
 }
 
@@ -1241,16 +1514,22 @@ function setupProfileEditing(){
 }
 
 function loadPrefs(){
-  const raw = localStorage.getItem(PREF_STORAGE_KEY);
+  const raw = localStorage.getItem(prefsStorageKey());
   const stored = raw ? safeJsonParse(raw, {}) : {};
   return Object.assign({ nearbyNotify: true, autoGps: true, nightSaver: false }, stored);
 }
 
 function savePrefs(next){
   try {
-    localStorage.setItem(PREF_STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(prefsStorageKey(), JSON.stringify(next));
   } catch {
     // ignore
+  }
+
+  if (serverReady) {
+    putJson('/api/prefs', next).catch(() => {
+      // ignore
+    });
   }
 }
 
@@ -1284,6 +1563,101 @@ function toggleSwitch(el){
     savePrefs(prefs);
   }
   showToast(el.classList.contains('on') ? '已開啟' : '已關閉');
+}
+
+function csvEscapeCell(value){
+  const s = value == null ? '' : String(value);
+  const needsQuote = /[\r\n",]/.test(s);
+  const escaped = s.replace(/"/g, '""');
+  return needsQuote ? `"${escaped}"` : escaped;
+}
+
+function downloadTextFile(filename, text, mime){
+  try {
+    const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    console.warn(e);
+    showToast('匯出失敗（瀏覽器不支援）');
+  }
+}
+
+function exportMyHazardRecordsCsv(){
+  // 以「社群貼文 isMine」作為「我的排雷紀錄」來源（同時支援離線 demo / 伺服器模式）
+  const mine = (Array.isArray(communityPosts) ? communityPosts : []).filter(p => p && p.isMine);
+  if (!mine.length) {
+    showToast('目前沒有可匯出的排雷紀錄');
+    return;
+  }
+
+  const headers = [
+    'createdAt',
+    'status',
+    'postId',
+    'hazardId',
+    'type',
+    'label',
+    'title',
+    'lat',
+    'lng',
+    'votes',
+    'commentCount',
+    'photoUrl'
+  ];
+
+  const rows = mine
+    .slice()
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+    .map(p => {
+      const h = hazards.find(x => x && x.id === p.hazardId) || {};
+      const createdAt = Number(p.createdAt || h.createdAt || 0);
+      const createdText = createdAt ? new Date(createdAt).toLocaleString('zh-TW') : '';
+      const status = typeof postStatus === 'function' ? postStatus(p) : '';
+      const type = (p.typeEmoji || h.type || h.emoji || '').toString();
+      const label = (p.label || h.label || '').toString();
+      const title = (h.title || p.title || '').toString();
+      const votes = Number.isFinite(Number(p.votes)) ? Number(p.votes) : 0;
+      const commentCount = Array.isArray(p.comments) ? p.comments.length : 0;
+      const photoUrl = (p.photoUrl || h.photoUrl || '').toString();
+
+      return {
+        createdAt: createdText,
+        status,
+        postId: p.id || '',
+        hazardId: p.hazardId || '',
+        type,
+        label,
+        title,
+        lat: (h.lat ?? ''),
+        lng: (h.lng ?? ''),
+        votes,
+        commentCount,
+        photoUrl
+      };
+    });
+
+  const bom = '\ufeff'; // 讓 Excel 也能正確讀 UTF-8
+  const lines = [];
+  lines.push(headers.map(csvEscapeCell).join(','));
+  rows.forEach(r => {
+    lines.push(headers.map(k => csvEscapeCell(r[k])).join(','));
+  });
+  const csv = bom + lines.join('\n');
+
+  const d = new Date();
+  const y = String(d.getFullYear());
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const filename = `排雷紀錄_${y}${m}${day}.csv`;
+  downloadTextFile(filename, csv, 'text/csv;charset=utf-8');
+  showToast('📊 已匯出 CSV');
 }
 
 // ====== 相機/相簿上傳（手機可直接開相機） ======
@@ -1439,6 +1813,16 @@ function addHazardCardToList(h){
   list.insertBefore(card, list.firstChild);
 }
 
+function updateHazardVoteDisplay(hazardId, votes){
+  try{
+    const card = document.querySelector(`.hcard[data-hazard-id="${hazardId}"]`);
+    if (!card) return;
+    const btn = card.querySelector('.vote-btn');
+    if (!btn) return;
+    btn.textContent = '👍 ' + (Number(votes) || 0);
+  }catch(e){console.warn(e)}
+}
+
 function createNewHazardFromReport(lat, lng){
   const cat = window.selectedCategory;
   const type = (cat && cat.emoji) ? cat.emoji : '⚠️';
@@ -1532,6 +1916,11 @@ if (photoInput) {
 }
 
 function submitLocalReport(){
+  if (!serverReady) {
+    showToast('請先登入');
+    showAuthModal();
+    return;
+  }
   if (!window.selectedSeverity) {
     showToast('請先選擇嚴重程度');
     return;
@@ -1597,7 +1986,14 @@ function submitLocalReport(){
           addHazardMarker(h);
           addHazardCardToList(h);
           bumpLocalReportBadge(h.id);
-          addCommunityPostFromReport(h); // 先保留本地假貼文的生成，讓畫面流暢
+          if (reportData.post) {
+            const p = reportData.post;
+            if (!communityPostById[p.id]) communityPosts.unshift(p);
+            communityPostById[p.id] = p;
+            renderCommunity();
+          } else {
+            addCommunityPostFromReport(h);
+          }
 
           const assigned = document.getElementById('report-assigned');
           if (assigned) {
@@ -1607,6 +2003,7 @@ function submitLocalReport(){
 
           map.setView([h.lat, h.lng], 16, { animate: true });
           goStep(3);
+          refreshMyStatsUi();
         }
       } catch(apiErr) {
         console.error(apiErr);
@@ -1634,17 +2031,83 @@ if (next2Btn) {
 
 // 初始渲染一次（避免空白）
 renderCommunity();
+wireAchievementCards();
+updateAchievementBadgeStates(myStatsCache || {});
 
 // Profile / Prefs 初始化
 applyProfileState(loadProfileState());
 setupProfileEditing();
 applyPrefs();
+
+function updateStatusTime(){
+  const el = document.getElementById('status-time');
+  if (!el) return;
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  el.textContent = `${hh}:${mm}`;
+}
+updateStatusTime();
+setInterval(updateStatusTime, 15000);
 // ====== 網頁開啟時，向後端要所有真實的排雷點 ======
 // ====== 網頁開啟時，向後端要所有真實的排雷點 ======
 async function loadRealData() {
   try {
     const res = await fetch('/api/state');
+    if (res.status === 401) {
+      serverReady = false;
+      showAuthModal();
+      return;
+    }
     const data = await res.json();
+
+    serverReady = true;
+
+    if (data && data.me) {
+      currentUser = data.me;
+    }
+
+    if (data && data.myStats) {
+      applyMyStats(data.myStats);
+    }
+
+    // Profile + Prefs：以伺服器資料為準（同時落回本機，避免離線時消失）
+    if (data.profile) {
+      const prev = serverReady;
+      serverReady = false;
+      saveProfileState(data.profile);
+      serverReady = prev;
+      applyProfileState(loadProfileState());
+    }
+    if (data.prefs) {
+      const prev = serverReady;
+      serverReady = false;
+      savePrefs(data.prefs);
+      serverReady = prev;
+      applyPrefs();
+    }
+
+    // Posts：載入真實貼文（seed 貼文仍由前端維持）
+    if (data.posts && Array.isArray(data.posts)) {
+      data.posts.forEach(p => {
+        if (!p || !p.id) return;
+        if (!communityPostById[p.id]) {
+          communityPosts.push(p);
+        }
+        if (!Array.isArray(p.comments)) p.comments = [];
+        communityPostById[p.id] = p;
+      });
+    }
+
+    // 載入 local voted 狀態，並合併伺服器回傳的 voted
+    loadLocalVotedPosts();
+    if (data.posts && Array.isArray(data.posts)) {
+      data.posts.forEach(p => {
+        if (!p || !p.id) return;
+        if (p.voted) localVotedPosts[p.id] = true;
+      });
+      saveLocalVotedPosts();
+    }
 
     // 建立一個字典：從 posts 中找出每個 hazardId 對應的 photoUrl
     const photoMap = {};
@@ -1667,11 +2130,122 @@ async function loadRealData() {
         }
       });
     }
+
+    renderCommunity();
+    refreshMyStatsUi();
   } catch (e) {
     console.warn('目前為離線模式，無法連接到 Node.js 後端', e);
   }
 }
-loadRealData();
+
+let authMode = 'login';
+
+function showAuthModal(){
+  const bg = document.getElementById('auth-bg');
+  if (bg) bg.classList.remove('hidden');
+  setAuthMode(authMode);
+}
+
+function hideAuthModal(){
+  const bg = document.getElementById('auth-bg');
+  if (bg) bg.classList.add('hidden');
+}
+
+function setAuthMode(mode){
+  authMode = mode === 'register' ? 'register' : 'login';
+  const name = document.getElementById('auth-name');
+  const city = document.getElementById('auth-city');
+  const submit = document.getElementById('auth-submit');
+  const msg = document.getElementById('auth-msg');
+  if (msg) msg.textContent = '';
+  const showExtra = authMode === 'register';
+  if (name) name.style.display = showExtra ? '' : 'none';
+  if (city) city.style.display = showExtra ? '' : 'none';
+  if (submit) submit.textContent = showExtra ? '註冊並登入' : '登入';
+
+  const b1 = document.getElementById('auth-mode-login');
+  const b2 = document.getElementById('auth-mode-register');
+  if (b1) b1.style.borderColor = authMode === 'login' ? 'var(--red)' : 'var(--border2)';
+  if (b2) b2.style.borderColor = authMode === 'register' ? 'var(--red)' : 'var(--border2)';
+}
+
+async function submitAuth(){
+  const uEl = document.getElementById('auth-username');
+  const pEl = document.getElementById('auth-password');
+  const nEl = document.getElementById('auth-name');
+  const cEl = document.getElementById('auth-city');
+  const msg = document.getElementById('auth-msg');
+  const btn = document.getElementById('auth-submit');
+  if (!uEl || !pEl) return;
+  const username = (uEl.value || '').trim().toLowerCase();
+  const password = String(pEl.value || '');
+  const name = nEl ? (nEl.value || '').trim() : '';
+  const city = cEl ? (cEl.value || '').trim() : '';
+
+  if (msg) msg.textContent = '處理中…';
+  if (btn) btn.disabled = true;
+  try {
+    if (authMode === 'register') {
+      const reg = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, name, city })
+      });
+      const regData = await reg.json().catch(() => ({}));
+      if (!reg.ok || (regData && regData.error)) throw new Error((regData && regData.error) || 'register_failed');
+    }
+
+    const login = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const loginData = await login.json().catch(() => ({}));
+    if (!login.ok || (loginData && loginData.error)) throw new Error((loginData && loginData.error) || 'login_failed');
+
+    currentUser = loginData.user || { username };
+    if (msg) msg.textContent = '✅ 登入成功';
+    hideAuthModal();
+    await loadRealData();
+  } catch (e) {
+    const text = String(e && e.message ? e.message : e);
+    if (msg) msg.textContent = '❌ ' + text;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function logoutApp(){
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } catch {
+    // ignore
+  }
+  serverReady = false;
+  currentUser = null;
+  myStatsCache = null;
+  applyMyStats({ myHazards: 0, myFixed: 0, receivedVotes: 0, helpedVotes: 0 });
+  updateAchievementBadgeStates({ myHazards: 0, myFixed: 0, receivedVotes: 0, helpedVotes: 0, nightReports: 0 });
+  showToast('已登出');
+  showAuthModal();
+}
+
+async function bootAuth(){
+  try {
+    const res = await fetch('/api/me');
+    const data = await res.json().catch(() => ({}));
+    if (data && data.loggedIn) {
+      currentUser = data.user;
+      await loadRealData();
+      return;
+    }
+  } catch {
+    // ignore
+  }
+  showAuthModal();
+}
+
+bootAuth();
 </script>
 
 

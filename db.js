@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const initSqlJs = require('sql.js');
+const crypto = require('crypto');
 
 const DB_FILE = path.join(__dirname, 'data.sqlite');
 
@@ -62,7 +63,89 @@ CREATE TABLE IF NOT EXISTS comments (
   at INTEGER NOT NULL,
   FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS admins (
+  username TEXT PRIMARY KEY,
+  salt TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  salt TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  userId TEXT NOT NULL,
+  createdAt INTEGER NOT NULL,
+  expiresAt INTEGER NOT NULL,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Per-user profile/prefs (v2)
+CREATE TABLE IF NOT EXISTS user_profiles (
+  userId TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  handle TEXT NOT NULL,
+  city TEXT NOT NULL,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_profile_tags (
+  userId TEXT NOT NULL,
+  tagText TEXT NOT NULL,
+  ord INTEGER NOT NULL,
+  PRIMARY KEY (userId, tagText),
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_prefs (
+  userId TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value INTEGER NOT NULL,
+  PRIMARY KEY (userId, key),
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_votes (
+  postId TEXT NOT NULL,
+  userId TEXT NOT NULL,
+  createdAt INTEGER NOT NULL,
+  PRIMARY KEY (postId, userId),
+  FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
 `;
+
+function hashPassword(password, saltHex) {
+  const salt = Buffer.from(String(saltHex || ''), 'hex');
+  const key = crypto.pbkdf2Sync(String(password), salt, 100000, 32, 'sha256');
+  return key.toString('hex');
+}
+
+function randomId(prefix) {
+  return `${prefix}${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
+}
+
+function hasColumn(db, tableName, columnName) {
+  const rows = db.exec(`PRAGMA table_info(${tableName})`);
+  if (!rows || !rows.length) return false;
+  const values = rows[0].values || [];
+  return values.some((v) => String(v[1]) === columnName);
+}
+
+function migrateSchema(db) {
+  // Add userId columns to existing tables so admin can see who created what.
+  // (SQLite doesn't support ADD COLUMN IF NOT EXISTS)
+  if (!hasColumn(db, 'hazards', 'userId')) db.run('ALTER TABLE hazards ADD COLUMN userId TEXT');
+  if (!hasColumn(db, 'posts', 'userId')) db.run('ALTER TABLE posts ADD COLUMN userId TEXT');
+  if (!hasColumn(db, 'comments', 'userId')) db.run('ALTER TABLE comments ADD COLUMN userId TEXT');
+}
 
 function exportDbToFile(db) {
   const data = db.export();
@@ -83,6 +166,19 @@ async function openDb() {
   }
 
   db.run(SCHEMA_SQL);
+  migrateSchema(db);
+
+  // Seed admin if missing (persisted in DB; do NOT store plaintext)
+  const adminRows = db.exec("SELECT username FROM admins WHERE username='admin' LIMIT 1");
+  if (!adminRows.length || !adminRows[0].values.length) {
+    const initialPassword = String(process.env.ADMIN_PASSWORD || 'admin1234');
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = hashPassword(initialPassword, salt);
+    const createdAt = Date.now();
+    const stmt = db.prepare('INSERT INTO admins (username, salt, hash, createdAt) VALUES (?, ?, ?, ?)');
+    stmt.run(['admin', salt, hash, createdAt]);
+    stmt.free();
+  }
 
   // Seed profile if missing
   const profileRows = db.exec("SELECT id FROM profile WHERE id='me' LIMIT 1");
@@ -132,5 +228,7 @@ function rowsToObjects(execResult) {
 
 module.exports = {
   openDb,
-  rowsToObjects
+  rowsToObjects,
+  hashPassword,
+  randomId
 };
