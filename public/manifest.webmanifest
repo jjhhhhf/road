@@ -1,0 +1,20 @@
+{
+  "name": "路口排雷",
+  "short_name": "路口排雷",
+  "description": "路口排雷：道路缺陷共筆地圖",
+  "lang": "zh-TW",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#FF3B4E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

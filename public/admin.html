@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>路口排雷 — 後台</title>
+<style>
+:root {
+  --bg: #0d0d0d; --bg2: #1a1a1a; --bg3: #252525; --card: #1e1e1e;
+  --border: #2e2e2e; --accent: #FF3B4E; --gold: #FFB800;
+  --green: #2ecc71; --blue: #3498db; --purple: #9b59b6;
+  --text: #f0f0f0; --text2: #aaa; --text3: #666; --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Header ── */
+header {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 13px 20px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-logo { font-size: 15px; font-weight: 800; }
+.mode-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.mode-badge.admin { background: rgba(255,59,78,0.15); color: var(--accent); border: 1px solid rgba(255,59,78,0.3); }
+.mode-badge.guest { background: rgba(52,152,219,0.15); color: var(--blue); border: 1px solid rgba(52,152,219,0.3); }
+.btn-logout {
+  padding: 6px 14px; background: var(--bg3); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;
+}
+.btn-logout:hover { border-color: var(--text2); color: var(--text); }
+
+/* ── Tabs ── */
+.nav-tabs {
+  display: flex; background: var(--bg2); border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 12px 20px; border: none; background: none; color: var(--text3);
+  font-size: 13px; cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent; transition: color 0.2s;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* ── Panels ── */
+.panel { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.panel.active { display: block; }
+
+/* ── Stat cards ── */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 18px 16px; border: 1px solid var(--border); transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: #3e3e3e; }
+.stat-card .s-icon { font-size: 20px; margin-bottom: 10px; }
+.stat-card .s-num { font-size: 30px; font-weight: 900; margin-bottom: 4px; }
+.stat-card .s-lbl { font-size: 12px; color: var(--text3); }
+
+/* ── Toolbar ── */
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.select-filter {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+  padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; cursor: pointer;
+}
+.btn-filter {
+  padding: 8px 16px; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.btn-filter:hover { border-color: var(--text2); color: var(--text); }
+.btn-export {
+  padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(46,204,113,0.1); border: 1px solid var(--green);
+  color: var(--green); border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;
+}
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; background: var(--card); }
+th { background: var(--bg3); padding: 11px 14px; font-size: 11px; font-weight: 600; color: var(--text3); text-align: left; white-space: nowrap; }
+td { padding: 11px 14px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,0.018); }
+
+/* ── Status badges ── */
+.badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.badge-pending  { background: rgba(255,184,0,.15);  color: var(--gold);   }
+.badge-verified { background: rgba(52,152,219,.15); color: var(--blue);   }
+.badge-fixed    { background: rgba(46,204,113,.15); color: var(--green);  }
+.badge-rejected { background: rgba(150,150,150,.15);color: var(--text3);  }
+
+/* ── Buttons ── */
+.btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.btn:hover { border-color: var(--text2); color: var(--text); }
+.btn-red { background: rgba(255,59,78,.08); border-color: rgba(255,59,78,.4); color: var(--accent); }
+.btn-red:hover { background: rgba(255,59,78,.15); border-color: var(--accent); }
+
+/* Status select inside table */
+select.select-status {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+  padding: 4px 8px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer;
+}
+
+/* ── Settings panel ── */
+.settings-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 24px; border: 1px solid var(--border); max-width: 400px;
+}
+.settings-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+.f-label { font-size: 12px; color: var(--text3); display: block; margin-bottom: 6px; }
+.f-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 14px;
+  outline: none; margin-bottom: 12px; transition: border-color 0.2s;
+}
+.f-input:focus { border-color: var(--accent); }
+.btn-save {
+  padding: 10px 20px; background: rgba(255,59,78,.12);
+  border: 1px solid var(--accent); color: var(--accent);
+  border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+}
+.pw-msg { margin-top: 10px; font-size: 13px; }
+
+</style>
+</head>
+<body>
+
+<!-- Admin App -->
+<div id="admin-app">
+  <header>
+    <div class="header-left">
+      <div class="header-logo">🛡️ 路口排雷後台</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">登出</button>
+  </header>
+
+  <div class="nav-tabs" id="nav-tabs">
+    <button class="tab active" data-panel="stats">📊 總覽</button>
+    <button class="tab" data-panel="hazards">🗺️ 危險點</button>
+    <button class="tab" data-panel="posts">📝 貼文</button>
+    <button class="tab" data-panel="comments">💬 留言</button>
+    <button class="tab" data-panel="users">👤 用戶</button>
+    <button class="tab" data-panel="settings">⚙️ 設定</button>
+  </div>
+
+  <!-- Stats -->
+  <div id="panel-stats" class="panel active">
+    <div class="stats-row" id="stats-row"></div>
+  </div>
+
+  <!-- Hazards -->
+  <div id="panel-hazards" class="panel">
+    <div class="toolbar">
+      <a href="/api/admin/export/csv" class="btn-export" id="export-btn">⬇️ 匯出 CSV</a>
+      <select id="hazard-filter" class="select-filter">
+        <option value="">全部狀態</option>
+        <option value="pending">待審</option>
+        <option value="verified">已驗證</option>
+        <option value="fixed">已修復</option>
+        <option value="rejected">已駁回</option>
+      </select>
+      <button class="btn-filter" onclick="loadHazards()">套用篩選</button>
+    </div>
+    <div class="table-wrap">
+      <table id="hazards-table">
+        <thead><tr>
+          <th>標題</th><th>類型</th><th>嚴重度</th><th>狀態</th>
+          <th>座標</th><th>時間</th><th id="hazard-action-th">操作</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Posts -->
+  <div id="panel-posts" class="panel">
+    <div class="table-wrap">
+      <table id="posts-table">
+        <thead><tr><th>標題</th><th>回報者</th><th>附議數</th><th>狀態</th><th>時間</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Comments -->
+  <div id="panel-comments" class="panel">
+    <div class="table-wrap">
+      <table id="comments-table">
+        <thead><tr><th>留言</th><th>作者</th><th>時間</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div id="panel-users" class="panel">
+    <div class="table-wrap">
+      <table id="users-table">
+        <thead><tr><th>帳號</th><th>積分</th><th>註冊時間</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="panel-settings" class="panel">
+    <div class="settings-card">
+      <h3>修改 Admin 密碼</h3>
+      <label class="f-label">舊密碼</label>
+      <input id="old-pw" type="password" class="f-input">
+      <label class="f-label">新密碼</label>
+      <input id="new-pw" type="password" class="f-input">
+      <button class="btn-save" onclick="changePw()">更新密碼</button>
+      <div id="pw-msg" class="pw-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let authHeader = null;
+
+const fmt = (ts) => new Date(ts).toLocaleString('zh-TW');
+const statusBadge = (s) => `<span class="badge badge-${s}">${{pending:'待審',verified:'已驗證',fixed:'已修復',rejected:'已駁回'}[s]||s}</span>`;
+
+function logout() {
+  sessionStorage.removeItem('adminCreds');
+  window.location.href = '/';
+}
+
+function api(method, url, body) {
+  const opts = { method, headers: {} };
+  if (authHeader) opts.headers['Authorization'] = 'Basic ' + authHeader;
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  return fetch(url, opts).then((r) => {
+    if (r.status === 401) { logout(); throw new Error('Unauthorized'); }
+    return r.json();
+  });
+}
+
+// ── Tab switching ──────────────────────────────────────
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+    const loaders = { hazards: loadHazards, posts: loadPosts, comments: loadComments, users: loadUsers };
+    loaders[tab.dataset.panel]?.();
+  });
+});
+
+// ── Stats ──────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const { stats } = await api('GET', '/api/admin/stats');
+    renderStats(stats);
+  } catch {}
+}
+
+function renderStats(s) {
+  document.getElementById('stats-row').innerHTML = [
+    ['🗺️', '全部危險點', s.total,    'var(--accent)' ],
+    ['⏳', '待審核',     s.pending,   'var(--gold)'   ],
+    ['✅', '已驗證',     s.verified,  'var(--blue)'   ],
+    ['🔧', '已修復',     s.fixed,     'var(--green)'  ],
+    ['👤', '用戶數',     s.users,     'var(--purple)' ],
+  ].map(([icon, lbl, num, color]) => `
+    <div class="stat-card">
+      <div class="s-icon">${icon}</div>
+      <div class="s-num" style="color:${color}">${num ?? 0}</div>
+      <div class="s-lbl">${lbl}</div>
+    </div>`).join('');
+}
+
+// ── Hazards ────────────────────────────────────────────
+async function loadHazards() {
+  const filter = document.getElementById('hazard-filter').value;
+  const q = filter ? '?status=' + filter : '';
+  const data = await api('GET', '/api/admin/hazards' + q);
+  const rows = data.items || [];
+  document.querySelector('#hazards-table tbody').innerHTML = rows.map(h => `
+    <tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.title}">${h.title}</td>
+      <td>${h.typeEmoji || ''} ${h.label || ''}</td>
+      <td>${h.severity || '—'}/5</td>
+      <td>
+        <select class="select-status" onchange="patchStatus('${h.id}',this.value)">
+          ${['pending','verified','fixed','rejected'].map(s =>
+            `<option value="${s}"${h.status===s?' selected':''}>${{pending:'待審',verified:'已驗證',fixed:'已修復',rejected:'已駁回'}[s]}</option>`
+          ).join('')}
+        </select>
+      </td>
+      <td style="font-size:11px;color:var(--text3)">${(+h.lat||0).toFixed(4)}, ${(+h.lng||0).toFixed(4)}</td>
+      <td style="font-size:11px;color:var(--text3);white-space:nowrap">${fmt(h.createdAt)}</td>
+      <td><button class="btn btn-red" onclick="delHazard('${h.id}')">刪除</button></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">無資料</td></tr>';
+}
+
+async function patchStatus(id, status) {
+  await api('PATCH', `/api/admin/hazards/${id}/status`, { status });
+}
+async function delHazard(id) {
+  if (!confirm('確定刪除？')) return;
+  await api('DELETE', '/api/admin/hazards/' + id);
+  loadHazards();
+}
+
+// ── Posts ──────────────────────────────────────────────
+async function loadPosts() {
+  const { items = [] } = await api('GET', '/api/admin/posts');
+  document.querySelector('#posts-table tbody').innerHTML = items.map(p => `
+    <tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.pinned ? '📌 ' : ''}${p.title}</td>
+      <td>${p.reporterName}</td>
+      <td>${p.votes}</td>
+      <td>${p.pinned
+        ? '<span class="badge" style="background:rgba(255,184,0,.15);color:var(--gold)">置頂</span>'
+        : '<span class="badge badge-pending" style="opacity:0.5">一般</span>'}</td>
+      <td style="font-size:11px;color:var(--text3);white-space:nowrap">${fmt(p.createdAt)}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn" onclick="pinPost('${p.id}', ${!p.pinned})">${p.pinned ? '📌 取消置頂' : '📌 置頂'}</button>
+        <button class="btn btn-red" onclick="delPost('${p.id}')">下架</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">無資料</td></tr>';
+}
+async function pinPost(id, pin) {
+  await api('PATCH', `/api/admin/posts/${id}/pin`, { pinned: pin });
+  loadPosts();
+}
+async function delPost(id) {
+  if (!confirm('確定下架刪除？')) return;
+  await api('DELETE', '/api/admin/posts/' + id); loadPosts();
+}
+
+// ── Comments ───────────────────────────────────────────
+async function loadComments() {
+  const { items = [] } = await api('GET', '/api/admin/comments');
+  document.querySelector('#comments-table tbody').innerHTML = items.map(c => `
+    <tr>
+      <td style="max-width:320px">${c.text}</td>
+      <td>${c.author}</td>
+      <td style="font-size:11px;color:var(--text3);white-space:nowrap">${fmt(c.at)}</td>
+      <td><button class="btn btn-red" onclick="delComment('${c.id}')">刪除</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px">無資料</td></tr>';
+}
+async function delComment(id) {
+  if (!confirm('確定刪除？')) return;
+  await api('DELETE', '/api/admin/comments/' + id); loadComments();
+}
+
+// ── Users ──────────────────────────────────────────────
+async function loadUsers() {
+  const { items = [] } = await api('GET', '/api/admin/users');
+  document.querySelector('#users-table tbody').innerHTML = items.map(u => `
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.points || 0}</td>
+      <td style="font-size:11px;color:var(--text3);white-space:nowrap">${fmt(u.createdAt)}</td>
+      <td><button class="btn btn-red" onclick="delUser('${u.id}')">刪除</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px">無資料</td></tr>';
+}
+async function delUser(id) {
+  if (!confirm('確定刪除用戶？此操作不可逆。')) return;
+  await api('DELETE', '/api/admin/users/' + id); loadUsers();
+}
+
+// ── Password ───────────────────────────────────────────
+async function changePw() {
+  const oldPw = document.getElementById('old-pw').value;
+  const newPw = document.getElementById('new-pw').value;
+  const msg = document.getElementById('pw-msg');
+  try {
+    await api('PUT', '/api/admin/password', { oldPassword: oldPw, newPassword: newPw });
+    msg.style.color = 'var(--green)'; msg.textContent = '✓ 密碼已更新';
+  } catch {
+    msg.style.color = 'var(--accent)'; msg.textContent = '✗ 更新失敗，請確認舊密碼';
+  }
+}
+
+// 從主登入頁跳轉過來時讀取憑證；無憑證則退回主登入頁
+(function init() {
+  const creds = sessionStorage.getItem('adminCreds');
+  if (!creds) { window.location.href = '/'; return; }
+  authHeader = creds;
+  loadStats();
+})();
+</script>
+</body>
+</html>

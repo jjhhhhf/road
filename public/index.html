@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d0d">
+<title>路口排雷</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- Auth Overlay -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">🔴 路口排雷</div>
+    <div class="auth-subtitle">交通缺陷共筆地圖</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">登入</button>
+      <button class="auth-tab" data-tab="register">註冊</button>
+    </div>
+    <div class="form-group">
+      <input id="auth-username" class="form-input" type="text" placeholder="帳號（英數字）" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <input id="auth-password" class="form-input" type="password" placeholder="密碼" autocomplete="current-password">
+    </div>
+    <div id="auth-register-fields" class="hidden">
+      <div class="form-group">
+        <input id="auth-name" class="form-input" type="text" placeholder="顯示名稱">
+      </div>
+      <div class="form-group">
+        <select id="auth-city" class="form-input">
+          <option value="">選擇所在城市</option>
+          <optgroup label="六都">
+            <option>台北市</option><option>新北市</option><option>桃園市</option>
+            <option>台中市</option><option>台南市</option><option selected>高雄市</option>
+          </optgroup>
+          <optgroup label="其他縣市">
+            <option>基隆市</option><option>新竹市</option><option>嘉義市</option>
+            <option>新竹縣</option><option>苗栗縣</option><option>彰化縣</option>
+            <option>南投縣</option><option>雲林縣</option><option>嘉義縣</option>
+            <option>屏東縣</option><option>宜蘭縣</option><option>花蓮縣</option>
+            <option>台東縣</option><option>澎湖縣</option><option>金門縣</option><option>連江縣</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+    <button id="auth-submit" class="btn-primary">進入</button>
+    <div id="auth-error" class="auth-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div id="view-container">
+
+    <!-- Map View -->
+    <div id="map-view" class="view active">
+      <div id="map-filters"></div>
+      <div id="map"></div>
+      <div id="map-scroll">
+        <div id="stats-bar">
+          <div class="stat-item">
+            <div class="stat-num red" id="stat-total">—</div>
+            <div class="stat-label">全台排雷點</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num gold" id="stat-pending">—</div>
+            <div class="stat-label">待審核中</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num green" id="stat-fixed">—%</div>
+            <div class="stat-label">修復進度</div>
+          </div>
+        </div>
+        <div id="nearby-list"></div>
+      </div>
+    </div>
+
+    <!-- Community View -->
+    <div id="community-view" class="view">
+      <div class="community-header"><h2>💬 社群附議</h2></div>
+      <div id="community-list"></div>
+    </div>
+
+    <!-- Achievements View -->
+    <div id="achievements-view" class="view">
+      <h2 style="padding:16px 16px 8px">🏆 成就徽章</h2>
+      <div id="achievements-content" style="padding:0 16px 80px"></div>
+    </div>
+
+    <!-- Profile View -->
+    <div id="profile-view" class="view">
+      <div id="profile-content" style="padding:16px 16px 80px"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-view="map">
+      <span class="icon">🗺️</span>首頁地圖
+    </button>
+    <button class="nav-btn" data-view="community">
+      <span class="icon">💬</span>社群附議
+    </button>
+    <button class="nav-btn" data-view="achievements">
+      <span class="icon">🏅</span>成就徽章
+    </button>
+    <button class="nav-btn" data-view="profile">
+      <span class="icon">👤</span>個人設定
+    </button>
+  </nav>
+</div>
+
+<!-- FAB -->
+<button id="fab" class="hidden">⚡ 快速排雷</button>
+
+<!-- Popup Card -->
+<div id="popup-card" class="hidden"></div>
+
+<!-- Report Modal -->
+<div id="report-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="modal-title">⚡ 快速排雷</div>
+      <button id="report-modal-close" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label form-label-required">缺陷類別</label>
+      <div id="report-cat-grid" class="cat-grid"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">嚴重程度</label>
+      <div class="severity-row">
+        <button class="sev-btn" data-sev="1">1<br><small>輕微</small></button>
+        <button class="sev-btn" data-sev="2">2<br><small>輕度</small></button>
+        <button class="sev-btn active" data-sev="3">3<br><small>中度</small></button>
+        <button class="sev-btn" data-sev="4">4<br><small>嚴重</small></button>
+        <button class="sev-btn" data-sev="5">5<br><small>極危</small></button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">描述（選填）</label>
+      <textarea id="report-desc" class="form-input" placeholder="簡短描述缺陷情況…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">現場照片（選填）</label>
+      <button id="report-photo-btn" class="btn-secondary" style="margin-top:0">📷 上傳照片</button>
+      <input id="report-photo-input" type="file" accept="image/*" capture="environment" style="display:none">
+      <div id="report-photo-preview"></div>
+    </div>
+
+    <div id="gps-status" class="gps-status"></div>
+    <button id="report-submit" class="btn-primary">📍 送出回報</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/map.js"></script>
+<script src="/js/community.js"></script>
+<script src="/js/achievements.js"></script>
+<script src="/js/profile.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>
