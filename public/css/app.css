@@ -241,6 +241,7 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  touch-action: none; /* 防止底層地圖接收觸控 */
 }
 .modal-overlay.hidden { display: none !important; }
 .modal-sheet {
@@ -248,11 +249,14 @@ body {
   border-radius: 24px 24px 0 0;
   width: 100%;
   max-height: 88dvh;
-  overflow-y: auto;
+  height: auto;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
+  will-change: scroll-position;
 }
 .modal-handle { width: 44px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 16px; }
 .modal-title { font-size: 17px; font-weight: 800; }
@@ -678,6 +682,51 @@ select.form-input { appearance: none; }
 
 /* ── Toast improvement ── */
 #toast { border-left: 3px solid var(--accent); font-weight: 500; }
+
+/* ── Map pick bar ── */
+#map-pick-bar {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  left: 0; right: 0;
+  background: rgba(20,20,20,0.96);
+  border-top: 2px solid var(--gold);
+  padding: 12px 16px;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(8px);
+}
+#map-pick-bar.hidden { display: none !important; }
+.pick-hint { font-size: 14px; font-weight: 600; color: var(--gold); flex: 1; }
+.pick-actions { display: flex; gap: 8px; }
+.pick-center-btn {
+  padding: 8px 14px; border-radius: 8px;
+  background: rgba(255,184,0,0.15); border: 1px solid var(--gold);
+  color: var(--gold); font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+}
+.pick-cancel-btn {
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); font-size: 13px; cursor: pointer;
+}
+
+/* ── 地圖選點模式：十字準星 ── */
+#map.picking { cursor: crosshair; }
+#map.picking::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 500;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+}
 
 /* ── GPS status in report modal ── */
 .gps-status {

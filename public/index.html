@@ -155,12 +155,21 @@
     <div class="form-group">
       <label class="form-label">現場照片（選填）</label>
       <button id="report-photo-btn" class="btn-secondary" style="margin-top:0">📷 上傳照片</button>
-      <input id="report-photo-input" type="file" accept="image/*" capture="environment" style="display:none">
+      <input id="report-photo-input" type="file" accept="image/*" style="display:none">
       <div id="report-photo-preview"></div>
     </div>
 
     <div id="gps-status" class="gps-status"></div>
     <button id="report-submit" class="btn-primary">📍 送出回報</button>
+  </div>
+</div>
+
+<!-- Map pick bar（地圖選點模式）-->
+<div id="map-pick-bar" class="hidden">
+  <div class="pick-hint">👆 點地圖任一處設定回報位置</div>
+  <div class="pick-actions">
+    <button class="pick-center-btn" onclick="confirmMapPick()">用地圖中心</button>
+    <button class="pick-cancel-btn" onclick="cancelMapPick()">取消</button>
   </div>
 </div>
 

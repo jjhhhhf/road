@@ -179,6 +179,31 @@ function seedDemo(db) {
     sc.free();
   });
 
+  // ── Demo 用戶（system_demo）資料初始化 ──────────────────
+  // 把正門坑洞 + 三叉路口兩筆危險點歸屬給 demo 用戶
+  db.run("UPDATE hazards SET userId='system_demo' WHERE id IN ('demo_h_01','demo_h_02')");
+  db.run("UPDATE posts SET userId='system_demo', reporterName='Demo 用戶' WHERE hazardId IN ('demo_h_01','demo_h_02')");
+
+  // demo 用戶對 10 篇貼文附議（達成「熱心市民」徽章門檻）
+  ['demo_p_03','demo_p_05','demo_p_08','demo_p_10','demo_p_12',
+   'demo_p_14','demo_p_15','demo_p_16','demo_p_18','demo_p_19'].forEach(postId => {
+    const sv = db.prepare('INSERT OR IGNORE INTO post_votes (postId, userId, createdAt) VALUES (?,?,?)');
+    sv.run([postId, 'system_demo', now]); sv.free();
+  });
+
+  // 積分 + 個人資料城市
+  db.run("UPDATE users SET points=180 WHERE id='system_demo'");
+  db.run("UPDATE user_profiles SET city='燕巢區' WHERE userId='system_demo'");
+
+  // 核發成就徽章
+  [
+    ['badge_first',  now - 86400000 * 7],   // 初心排雷師
+    ['badge_vote10', now - 86400000 * 2],   // 熱心市民
+  ].forEach(([badgeId, earnedAt]) => {
+    const sb = db.prepare('INSERT OR IGNORE INTO user_badges (userId, badgeId, earnedAt) VALUES (?,?,?)');
+    sb.run(['system_demo', badgeId, earnedAt]); sb.free();
+  });
+
   console.log(`[demo] 已植入 ${DEMO_HAZARDS.length} 筆危險點、${DEMO_POSTS.length} 筆貼文、${DEMO_COMMENTS.length} 則留言`);
 }
 

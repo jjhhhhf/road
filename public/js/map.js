@@ -40,8 +40,6 @@ function initMap() {
     window.onMapPick && window.onMapPick(e.latlng.lat, e.latlng.lng);
   });
 
-  // Auto-locate silently on load
-  locateMe(true);
 }
 
 function locateMe(silent = false) {
@@ -61,10 +59,10 @@ function locateMe(silent = false) {
     },
     (err) => {
       if (silent) return;
-      if (err.code === 1) {
-        showToast('請在瀏覽器設定允許位置存取');
-      } else if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-        showToast('HTTP 連線受限，無法自動定位');
+      if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+        showToast('手機 HTTP 無法定位，請用回報表單內的「地圖選點」');
+      } else if (err.code === 1) {
+        showToast('請在瀏覽器允許位置存取後再試');
       } else {
         showToast('無法取得位置，請確認定位設定');
       }
@@ -104,14 +102,9 @@ function renderMapHazards(hazards, categories = []) {
     });
 
     const marker = L.marker([h.lat, h.lng], { icon }).addTo(map);
-    const sevLabel = ['', '輕微', '輕度', '中度', '嚴重', '極危'][h.severity] || '';
-    marker.bindPopup(`
-      <div style="min-width:160px;font-family:system-ui">
-        <strong>${escHtml(h.title)}</strong><br>
-        <small style="color:#aaa">${cat?.name || h.label} · ${sevLabel}</small>
-      </div>`);
     marker.on('click', () => {
-      map.flyTo([h.lat, h.lng], Math.max(map.getZoom(), 17), { duration: 0.6 });
+      map.flyTo([h.lat, h.lng], Math.max(map.getZoom(), 17), { duration: 0.5 });
+      window.showHazardPopup && window.showHazardPopup(h.id);
     });
     markers[h.id] = marker;
   });
@@ -125,8 +118,20 @@ function panTo(lat, lng, zoom = 15) {
   if (map) map.setView([lat, lng], zoom);
 }
 
+function setPickingMode(on) {
+  document.getElementById('map')?.classList.toggle('picking', on);
+}
+
+function getMapCenter() {
+  if (!map) return null;
+  const c = map.getCenter();
+  return { lat: c.lat, lng: c.lng };
+}
+
 window.initMap = initMap;
 window.locateMe = locateMe;
 window.panTo = panTo;
 window.renderMapHazards = renderMapHazards;
 window.invalidateMapSize = invalidateMapSize;
+window.setPickingMode = setPickingMode;
+window.getMapCenter = getMapCenter;

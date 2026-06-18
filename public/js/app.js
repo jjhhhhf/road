@@ -71,7 +71,7 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
         currentUser = user;
         authOverlay.classList.add('hidden');
         await loadState();
-        window.panTo && window.panTo(22.6916, 120.3767, 16);
+        window.panTo && window.panTo(22.6916, 120.3763, 16);
         showToast('✅ 展示模式，地圖移至燕巢校區');
         return;
       }
@@ -176,12 +176,20 @@ function renderFilterChips(categories) {
       bar.querySelectorAll('.filter-chip').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = btn.dataset.cat;
-      if (STATE) renderNearbyList(STATE);
+      if (STATE) {
+        renderNearbyList(STATE);
+        const filtered = activeFilter === 'all'
+          ? STATE.hazards
+          : STATE.hazards.filter((h) => h.categoryId === activeFilter);
+        window.renderMapHazards && window.renderMapHazards(filtered, STATE.categories);
+      }
     });
   });
 }
 
 // ── Popup card ─────────────────────────────────────────
+window.showHazardPopup = (hazardId) => { if (STATE) showPopup(hazardId, STATE); };
+
 function showPopup(hazardId, state) {
   const h = state.hazards.find((x) => x.id === hazardId);
   if (!h) return;
@@ -260,16 +268,38 @@ function setGpsStatus(state) {
 
 function startMapPick() {
   document.getElementById('report-modal').classList.add('hidden');
-  showToast('請在地圖上點選回報位置');
+  document.getElementById('map-pick-bar').classList.remove('hidden');
+  window.setPickingMode && window.setPickingMode(true);
   window.pickingLocation = true;
-  window.onMapPick = (lat, lng) => {
-    currentGps = { lat, lng };
-    document.getElementById('report-modal').classList.remove('hidden');
-    setGpsStatus('map');
-    window.onMapPick = null;
-  };
+  window.onMapPick = (lat, lng) => confirmMapPick(lat, lng);
 }
-window.startMapPick = startMapPick;
+
+function confirmMapPick(lat, lng) {
+  if (lat == null || lng == null) {
+    const c = window.getMapCenter && window.getMapCenter();
+    if (!c) return;
+    lat = c.lat; lng = c.lng;
+  }
+  currentGps = { lat, lng };
+  window.pickingLocation = false;
+  window.onMapPick = null;
+  window.setPickingMode && window.setPickingMode(false);
+  document.getElementById('map-pick-bar').classList.add('hidden');
+  document.getElementById('report-modal').classList.remove('hidden');
+  setGpsStatus('map');
+}
+
+function cancelMapPick() {
+  window.pickingLocation = false;
+  window.onMapPick = null;
+  window.setPickingMode && window.setPickingMode(false);
+  document.getElementById('map-pick-bar').classList.add('hidden');
+  document.getElementById('report-modal').classList.remove('hidden');
+}
+
+window.startMapPick   = startMapPick;
+window.confirmMapPick = confirmMapPick;
+window.cancelMapPick  = cancelMapPick;
 
 function renderCategoryPicker(cats) {
   const grid = document.getElementById('report-cat-grid');
@@ -383,7 +413,7 @@ window.triggerDemoSeed = async (btn) => {
     updateStatsBar(STATE);
     renderNearbyList(STATE);
     window.renderMapHazards && renderMapHazards(STATE.hazards, STATE.categories);
-    window.panTo && window.panTo(22.6916, 120.3767, 16);
+    window.panTo && window.panTo(22.6916, 120.3763, 16);
     activateView('map');
     showToast('✅ 展示資料已載入，地圖移至燕巢校區');
   } catch {
@@ -398,12 +428,18 @@ window.triggerDemoSeed = async (btn) => {
 (async () => {
   document.getElementById('fab').classList.add('hidden');
   const { loggedIn, user } = await API.auth.me();
-  if (loggedIn && user?.username !== 'admin' && user?.username !== 'admindemo') {
+  const adminNames = ['admin', 'admindemo'];
+  if (loggedIn && !adminNames.includes(user?.username)) {
     currentUser = user;
     authOverlay.classList.add('hidden');
     await loadState();
+    // demo 帳號 panTo 燕巢，一般帳號自動定位
+    if (user.username === 'demo') {
+      window.panTo && window.panTo(22.6916, 120.3763, 16);
+    } else {
+      window.locateMe && window.locateMe(true);
+    }
   } else {
-    // admin 帳號不自動進入一般 App，強制走登入頁 → 轉後台
     authOverlay.classList.remove('hidden');
   }
 })();
