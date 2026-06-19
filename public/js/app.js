@@ -204,7 +204,9 @@ function openReportModal() {
   document.getElementById('report-photo-preview').innerHTML = '';
   updateSeverityUI();
   renderCategoryPicker(STATE.categories || []);
-  document.getElementById('report-modal').classList.remove('hidden');
+  const reportModal = document.getElementById('report-modal');
+  reportModal.classList.remove('hidden');
+  reportModal.querySelector('.modal-sheet').scrollTop = 0;
   // HTTP 非 localhost 下手機瀏覽器會拒絕 GPS，直接顯示地圖選點
   const isHttpMobile = location.protocol === 'http:' && location.hostname !== 'localhost';
   if (!navigator.geolocation || isHttpMobile) {
