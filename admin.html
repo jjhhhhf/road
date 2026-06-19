@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>路口排雷｜管理後台</title>
+  <style>
+    :root{color-scheme:dark;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans TC,Arial; background:#0C0D12; color:#F0F2FF;}
+    header{position:sticky;top:0;background:#13141C;border-bottom:1px solid #2A2D40;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+    h1{font-size:16px;margin:0;font-weight:800;letter-spacing:-.2px;}
+    main{padding:16px;max-width:1100px;margin:0 auto;}
+    .card{background:#13141C;border:1px solid #2A2D40;border-radius:16px;padding:14px 14px;margin-bottom:12px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .muted{color:#9098B8;font-size:12px;}
+    button{background:#FF3B4E;border:none;color:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;}
+    button.secondary{background:#212435;color:#F0F2FF;border:1px solid #353855;}
+    button.danger{background:#FF3B4E;}
+    button:disabled{opacity:.6;cursor:not-allowed;}
+    input{background:#0C0D12;border:1px solid #353855;color:#F0F2FF;border-radius:12px;padding:10px 12px;outline:none;}
+    table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid #2A2D40;}
+    th,td{font-size:12px;padding:10px 10px;border-bottom:1px solid #2A2D40;vertical-align:top;}
+    th{color:#9098B8;text-align:left;background:#1A1C28;}
+    tr:last-child td{border-bottom:none;}
+    a{color:#3D8EFF;text-decoration:none;}
+    .pill{display:inline-block;font-size:11px;border:1px solid #353855;border-radius:999px;padding:3px 8px;color:#9098B8;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠️ 路口排雷｜管理後台</h1>
+    <span class="pill" id="srv">連線中…</span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <a href="/" class="muted" style="align-self:center;">回到 App</a>
+      <button class="secondary" id="refresh">重新整理</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div style="font-weight:800;">總覽</div>
+          <div class="muted">需要帳密：瀏覽器會跳出 Basic Auth 視窗。</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div class="pill" id="cnt-h">排雷點：-</div>
+        <div class="pill" id="cnt-p">貼文：-</div>
+        <div class="pill" id="cnt-c">留言：-</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-weight:800;">排雷點 hazards</div>
+          <div class="muted">只顯示「你新增、已寫入資料庫」的排雷點。</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;overflow:auto;">
+        <table>
+          <thead><tr><th>ID</th><th>類型</th><th>標籤</th><th>標題</th><th>座標</th><th>時間</th><th></th></tr></thead>
+          <tbody id="hazards"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-weight:800;">社群貼文 posts</div>
+          <div class="muted">可刪除貼文（會連帶刪除留言）。</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;overflow:auto;">
+        <table>
+          <thead><tr><th>ID</th><th>hazardId</th><th>標題</th><th>附議</th><th>作者</th><th>時間</th><th></th></tr></thead>
+          <tbody id="posts"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-weight:800;">留言 comments</div>
+          <div class="muted">可單獨刪除留言。</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;overflow:auto;">
+        <table>
+          <thead><tr><th>ID</th><th>postId</th><th>作者</th><th>內容</th><th>時間</th><th></th></tr></thead>
+          <tbody id="comments"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:800;">更改 admin 密碼</div>
+      <div class="muted" style="margin-top:6px;">密碼會以雜湊儲存在 data.sqlite（不存明文）。</div>
+      <div class="row" style="margin-top:10px;">
+        <input id="oldPwd" type="password" placeholder="舊密碼" />
+        <input id="newPwd" type="password" placeholder="新密碼（至少 6 字）" />
+        <button id="chg">更新密碼</button>
+      </div>
+      <div class="muted" id="chgMsg" style="margin-top:8px;"></div>
+    </div>
+  </main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const fmt = (ts) => {
+    if (!ts) return '-';
+    const d = new Date(Number(ts));
+    if (Number.isNaN(d.getTime())) return '-';
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    return `${yy}-${mm}-${dd} ${hh}:${mi}`;
+  };
+
+  async function j(url, opts){
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      const text = await res.text().catch(()=>'');
+      throw new Error(`HTTP ${res.status} ${text}`);
+    }
+    return res.json();
+  }
+
+  async function loadAll(){
+    $('srv').textContent = '讀取中…';
+    const [haz, posts, com] = await Promise.all([
+      j('/api/admin/hazards'),
+      j('/api/admin/posts'),
+      j('/api/admin/comments')
+    ]);
+    $('srv').textContent = '已連線';
+
+    $('cnt-h').textContent = `排雷點：${haz.items.length}`;
+    $('cnt-p').textContent = `貼文：${posts.items.length}`;
+    $('cnt-c').textContent = `留言：${com.items.length}`;
+
+    $('hazards').innerHTML = haz.items.map((h) => `
+      <tr>
+        <td>${h.id}</td>
+        <td>${h.typeEmoji}</td>
+        <td>${h.label}</td>
+        <td>${h.title}</td>
+        <td>${Number(h.lat).toFixed(5)}, ${Number(h.lng).toFixed(5)}</td>
+        <td>${fmt(h.createdAt)}</td>
+        <td><button class="danger" data-del="haz" data-id="${h.id}">刪除</button></td>
+      </tr>
+    `).join('');
+
+    $('posts').innerHTML = posts.items.map((p) => `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.hazardId}</td>
+        <td>${p.title}</td>
+        <td>${p.votes}</td>
+        <td>${p.reporterName}</td>
+        <td>${fmt(p.createdAt)}</td>
+        <td><button class="danger" data-del="post" data-id="${p.id}">刪除</button></td>
+      </tr>
+    `).join('');
+
+    $('comments').innerHTML = com.items.map((c) => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.postId}</td>
+        <td>${c.author}</td>
+        <td>${c.text}</td>
+        <td>${fmt(c.at)}</td>
+        <td><button class="danger" data-del="comment" data-id="${c.id}">刪除</button></td>
+      </tr>
+    `).join('');
+  }
+
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-del]');
+    if (!btn) return;
+    const kind = btn.dataset.del;
+    const id = btn.dataset.id;
+    if (!id) return;
+    if (!confirm(`確定刪除 ${kind}：${id}？`)) return;
+
+    btn.disabled = true;
+    try {
+      if (kind === 'haz') await j(`/api/admin/hazards/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (kind === 'post') await j(`/api/admin/posts/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (kind === 'comment') await j(`/api/admin/comments/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      await loadAll();
+    } catch (err) {
+      alert(String(err && err.message ? err.message : err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $('refresh').addEventListener('click', () => loadAll().catch((e) => {
+    $('srv').textContent = '連線失敗';
+    alert(String(e && e.message ? e.message : e));
+  }));
+
+  $('chg').addEventListener('click', async () => {
+    $('chgMsg').textContent = '';
+    const oldPassword = $('oldPwd').value;
+    const newPassword = $('newPwd').value;
+    if (!newPassword || newPassword.length < 6) {
+      $('chgMsg').textContent = '新密碼至少 6 字';
+      return;
+    }
+    $('chg').disabled = true;
+    try {
+      await j('/api/admin/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPassword, newPassword })
+      });
+      $('oldPwd').value = '';
+      $('newPwd').value = '';
+      $('chgMsg').textContent = '✅ 已更新密碼';
+    } catch (err) {
+      $('chgMsg').textContent = '❌ 更新失敗：' + String(err && err.message ? err.message : err);
+    } finally {
+      $('chg').disabled = false;
+    }
+  });
+
+  loadAll().catch((e) => {
+    $('srv').textContent = '連線失敗';
+    // 401 會觸發瀏覽器跳 Basic Auth 視窗；若仍失敗就提示。
+    console.warn(e);
+  });
+</script>
+</body>
+</html>

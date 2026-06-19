@@ -1,0 +1,20 @@
+{
+  "name": "路口排雷",
+  "short_name": "路口排雷",
+  "description": "路口排雷：道路缺陷回報與地圖互動展示",
+  "lang": "zh-TW",
+  "start_url": "./%E8%B7%AF%E5%8F%A3%E6%8E%92%E9%9B%B7_%E5%AE%8C%E6%95%B4%E7%89%88App.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0C0D12",
+  "theme_color": "#FF3B4E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
