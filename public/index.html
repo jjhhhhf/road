@@ -15,7 +15,7 @@
 <!-- Auth Overlay -->
 <div id="auth-overlay">
   <div class="auth-box">
-    <div class="auth-logo">🔴 路口排雷</div>
+    <div class="auth-logo">路口<span>排雷</span></div>
     <div class="auth-subtitle">交通缺陷共筆地圖</div>
     <div class="auth-tabs">
       <button class="auth-tab active" data-tab="login">登入</button>
@@ -82,14 +82,14 @@
 
     <!-- Community View -->
     <div id="community-view" class="view">
-      <div class="community-header"><h2>💬 社群附議</h2></div>
+      <div class="community-header"><h2>社群附議</h2></div>
       <div id="community-list"></div>
     </div>
 
     <!-- Achievements View -->
     <div id="achievements-view" class="view">
-      <h2 style="padding:16px 16px 8px">🏆 成就徽章</h2>
-      <div id="achievements-content" style="padding:0 16px 80px"></div>
+      <h2>成就</h2>
+      <div id="achievements-content"></div>
     </div>
 
     <!-- Profile View -->
@@ -102,22 +102,22 @@
   <!-- Bottom Nav -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-view="map">
-      <span class="icon">🗺️</span>首頁地圖
+      <span class="icon">🗺️</span>地圖
     </button>
     <button class="nav-btn" data-view="community">
-      <span class="icon">💬</span>社群附議
+      <span class="icon">💬</span>社群
     </button>
     <button class="nav-btn" data-view="achievements">
-      <span class="icon">🏅</span>成就徽章
+      <span class="icon">🏅</span>成就
     </button>
     <button class="nav-btn" data-view="profile">
-      <span class="icon">👤</span>個人設定
+      <span class="icon">👤</span>我的
     </button>
   </nav>
 </div>
 
 <!-- FAB -->
-<button id="fab" class="hidden">⚡ 快速排雷</button>
+<button id="fab" class="hidden">回報</button>
 
 
 <!-- Report Modal -->
@@ -125,7 +125,7 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div class="modal-title">⚡ 快速排雷</div>
+      <div class="modal-title">回報缺陷</div>
       <button id="report-modal-close" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
     </div>
 
@@ -152,13 +152,13 @@
 
     <div class="form-group">
       <label class="form-label">現場照片（選填）</label>
-      <button id="report-photo-btn" class="btn-secondary" style="margin-top:0">📷 上傳照片</button>
+      <button id="report-photo-btn" class="btn-secondary" style="margin-top:0">上傳照片</button>
       <input id="report-photo-input" type="file" accept="image/*" style="display:none">
       <div id="report-photo-preview"></div>
     </div>
 
     <div id="gps-status" class="gps-status"></div>
-    <button id="report-submit" class="btn-primary">📍 送出回報</button>
+    <button id="report-submit" class="btn-primary">送出回報</button>
   </div>
 </div>
 

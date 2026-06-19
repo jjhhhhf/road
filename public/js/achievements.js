@@ -32,8 +32,11 @@ async function renderAchievements(state) {
 
   container.innerHTML = `
     <div class="points-banner">
-      <div class="points-num">${points.toLocaleString()}</div>
-      <div class="points-label">累積積分</div>
+      <div>
+        <div class="points-num">${points.toLocaleString()}</div>
+        <div class="points-unit">積分</div>
+      </div>
+      <div class="points-label">持續回報缺陷<br>累積更多積分</div>
     </div>
     <div class="badges-section-title">成就勳章</div>
     <div class="badges-list">
