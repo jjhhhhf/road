@@ -140,7 +140,6 @@ function renderNearbyList(state) {
     card.addEventListener('click', () => {
       const h = state.hazards.find((x) => x.id === card.dataset.id);
       if (h) window.panTo && window.panTo(h.lat, h.lng, 17);
-      showPopup(card.dataset.id, state);
     });
   });
 }
@@ -187,27 +186,6 @@ function renderFilterChips(categories) {
   });
 }
 
-// ── Popup card ─────────────────────────────────────────
-window.showHazardPopup = (hazardId) => { if (STATE) showPopup(hazardId, STATE); };
-
-function showPopup(hazardId, state) {
-  const h = state.hazards.find((x) => x.id === hazardId);
-  if (!h) return;
-  const cat = state.categories?.find((c) => c.id === h.categoryId);
-  const popup = document.getElementById('popup-card');
-  const sevLabel = ['', '輕微', '輕度', '中度', '嚴重', '極危'][h.severity] || '';
-  popup.innerHTML = `
-    <div class="popup-header">
-      <span class="popup-title">${escHtml(h.title)}</span>
-      <button class="popup-close" onclick="document.getElementById('popup-card').classList.add('hidden')">✕</button>
-    </div>
-    <div class="popup-meta">
-      ${cat ? `<span>${cat.emoji} ${cat.name}</span>` : ''}
-      <span class="tag tag-sev-${h.severity}">${sevLabel}</span>
-      <span class="tag tag-status-${h.status}">${{ pending:'待審', verified:'已驗證', fixed:'已修復', rejected:'已駁回' }[h.status]||''}</span>
-    </div>`;
-  popup.classList.remove('hidden');
-}
 
 // ── Report modal ───────────────────────────────────────
 let selectedSeverity = 3;

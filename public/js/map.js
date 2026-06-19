@@ -104,7 +104,6 @@ function renderMapHazards(hazards, categories = []) {
     const marker = L.marker([h.lat, h.lng], { icon }).addTo(map);
     marker.on('click', () => {
       map.flyTo([h.lat, h.lng], Math.max(map.getZoom(), 17), { duration: 0.5 });
-      window.showHazardPopup && window.showHazardPopup(h.id);
     });
     markers[h.id] = marker;
   });

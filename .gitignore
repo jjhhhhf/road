@@ -2,5 +2,6 @@ node_modules/
 uploads/
 data.sqlite
 data-demo.sqlite
+.certs/
 *.log
 .env
