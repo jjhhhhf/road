@@ -2,6 +2,7 @@
 
 let STATE = null;
 let currentUser = null;
+Object.defineProperty(window, 'STATE', { get: () => STATE });
 
 // ── Toast ──────────────────────────────────────────────
 let toastTimer = null;
@@ -111,13 +112,12 @@ async function loadState() {
 }
 
 function updateStatsBar(state) {
-  const total = state.hazards.length;
-  const pending = state.hazards.filter((h) => h.status === 'pending').length;
-  const fixed = state.hazards.filter((h) => h.status === 'fixed').length;
-  const pct = total > 0 ? Math.round((fixed / total) * 100) : 0;
-  document.getElementById('stat-total').textContent = total.toLocaleString();
-  document.getElementById('stat-pending').textContent = pending.toLocaleString();
-  document.getElementById('stat-fixed').textContent = pct + '%';
+  const total    = state.hazards.length;
+  const verified = state.hazards.filter((h) => h.status === 'verified').length;
+  const fixed    = state.hazards.filter((h) => h.status === 'fixed').length;
+  document.getElementById('stat-total').textContent    = total.toLocaleString();
+  document.getElementById('stat-verified').textContent = verified.toLocaleString();
+  document.getElementById('stat-fixed').textContent    = fixed.toLocaleString();
 }
 
 // ── Nearby list ────────────────────────────────────────

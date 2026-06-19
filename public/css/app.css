@@ -154,9 +154,10 @@ body {
   border: 1px solid var(--border);
 }
 .stat-num { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
-.stat-num.red { color: var(--accent); }
-.stat-num.gold { color: var(--gold); }
+.stat-num.red   { color: var(--accent); }
+.stat-num.gold  { color: var(--gold); }
 .stat-num.green { color: var(--green); }
+.stat-num.blue  { color: var(--blue); }
 .stat-label { font-size: 10px; color: var(--text3); margin-top: 3px; font-weight: 500; }
 
 #nearby-list { padding: 0 12px 100px; }
@@ -379,6 +380,17 @@ select.form-input { appearance: none; }
 }
 .post-author { font-size: 13px; font-weight: 600; }
 .post-time { font-size: 11px; color: var(--text3); }
+.post-cat-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  color: var(--text2);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+.post-status-row { margin: 4px 0 2px; }
 .post-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
 .post-photo { width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 200px; object-fit: cover; }
 .post-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
@@ -452,20 +464,63 @@ select.form-input { appearance: none; }
 }
 .points-num { font-size: 48px; font-weight: 900; color: var(--gold); }
 .points-label { font-size: 13px; color: var(--text3); margin-top: 4px; }
-.badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.badge-card {
+.badges-section-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+
+.badges-list { display: flex; flex-direction: column; gap: 10px; }
+
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: var(--card);
-  border-radius: var(--radius);
-  padding: 14px 10px;
-  text-align: center;
   border: 1px solid var(--border);
-  transition: border-color 0.2s;
+  border-radius: var(--radius);
+  padding: 14px;
+  opacity: 0.55;
+  transition: opacity 0.2s, border-color 0.2s;
 }
-.badge-card.earned { border-color: var(--gold); }
-.badge-emoji { font-size: 32px; margin-bottom: 6px; }
-.badge-name { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
-.badge-desc { font-size: 10px; color: var(--text3); }
-.badge-card:not(.earned) { opacity: 0.4; }
+.badge-row.earned { opacity: 1; border-color: rgba(255,184,0,0.4); }
+
+.badge-row-icon {
+  font-size: 30px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg3);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.badge-row-icon.earned { background: rgba(255,184,0,0.12); }
+
+.badge-row-body { flex: 1; min-width: 0; }
+.badge-row-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.badge-row-name { font-size: 14px; font-weight: 700; }
+.badge-earned-tag {
+  font-size: 10px; font-weight: 700;
+  color: var(--gold);
+  background: rgba(255,184,0,0.12);
+  border: 1px solid rgba(255,184,0,0.3);
+  border-radius: 8px;
+  padding: 1px 7px;
+}
+.badge-row-desc { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+
+.badge-progress-wrap {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.badge-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.badge-progress-label { font-size: 11px; color: var(--text3); }
 
 /* ── Profile view ── */
 #profile-view {
@@ -474,7 +529,33 @@ select.form-input { appearance: none; }
   -webkit-overflow-scrolling: touch;
 }
 #profile-content { padding: 16px 16px 100px; }
-.profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.profile-header-info { flex: 1; min-width: 0; }
+.profile-edit-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.profile-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.profile-edit-form {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.profile-edit-actions { display: flex; gap: 10px; margin-top: 12px; }
+.profile-edit-actions .btn-primary,
+.profile-edit-actions .btn-secondary { flex: 1; padding: 11px; }
+
+.section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
 .profile-avatar {
   width: 60px; height: 60px;
   border-radius: 50%;

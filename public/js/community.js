@@ -9,7 +9,7 @@ function renderCommunity(state) {
     return;
   }
 
-  container.innerHTML = state.posts.map((p) => postCard(p, state.me)).join('');
+  container.innerHTML = state.posts.map((p) => postCard(p, state.me, state.categories || [])).join('');
 
   container.querySelectorAll('.vote-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -51,19 +51,25 @@ function renderCommunity(state) {
   });
 }
 
-function postCard(p, me) {
+function postCard(p, me, categories = []) {
   const isMe = p.isMine || (me && p.userId === me.id);
   const timeAgo = formatTime(p.createdAt);
+  const hazard = window.STATE?.hazards?.find(h => h.id === p.hazardId);
+  const cat = categories.find(c => c.id === hazard?.categoryId);
+  const statusLabel = { pending: '待審', verified: '已驗證', fixed: '已修復', rejected: '已駁回' }[hazard?.status] || '';
+  const statusClass = hazard?.status || 'pending';
   return `
     <div class="post-card${p.pinned ? ' post-pinned' : ''}">
       ${p.pinned ? '<div class="pin-badge">📌 置頂</div>' : ''}
       <div class="post-header">
         <div class="post-avatar">${p.typeEmoji || '⚠️'}</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="post-author">${escHtml(p.reporterName)} ${isMe ? '<span style="color:var(--accent);font-size:11px">（我）</span>' : ''}</div>
           <div class="post-time">${timeAgo}</div>
         </div>
+        ${cat ? `<span class="post-cat-tag">${cat.emoji} ${cat.name}</span>` : ''}
       </div>
+      ${hazard ? `<div class="post-status-row"><span class="tag tag-status-${statusClass}">${statusLabel}</span></div>` : ''}
       <div class="post-title">${escHtml(p.title)}</div>
       ${p.photoUrl ? `<img class="post-photo" src="${p.photoUrl}" alt="現場照片" loading="lazy">` : ''}
       <div class="post-actions">
