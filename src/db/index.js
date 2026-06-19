@@ -133,9 +133,11 @@ function seedAdmin(db) {
 }
 
 function seedDemo(db) {
-  // idempotent: skip if already seeded
-  const check = db.exec("SELECT id FROM hazards WHERE id='demo_h_01' LIMIT 1");
-  if (check.length && check[0].values.length) return;
+  // 每次都刪除舊 demo 資料再重建，確保座標更新後立即生效
+  db.run("DELETE FROM hazards WHERE id LIKE 'demo_h_%'");
+  db.run("DELETE FROM posts    WHERE id LIKE 'demo_p_%'");
+  db.run("DELETE FROM comments WHERE id LIKE 'demo_c_%'");
+  db.run("DELETE FROM post_votes WHERE postId LIKE 'demo_p_%'");
 
   const now = Date.now();
 
@@ -180,7 +182,9 @@ function seedDemo(db) {
   });
 
   // ── Demo 用戶（system_demo）資料初始化 ──────────────────
-  // 把正門坑洞 + 三叉路口兩筆危險點歸屬給 demo 用戶
+  db.run("DELETE FROM post_votes   WHERE userId='system_demo'");
+  db.run("DELETE FROM user_badges  WHERE userId='system_demo'");
+  // 把正門坑洞 + 校門前路口兩筆危險點歸屬給 demo 用戶
   db.run("UPDATE hazards SET userId='system_demo' WHERE id IN ('demo_h_01','demo_h_02')");
   db.run("UPDATE posts SET userId='system_demo', reporterName='Demo 用戶' WHERE hazardId IN ('demo_h_01','demo_h_02')");
 

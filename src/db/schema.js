@@ -166,48 +166,48 @@ const DEMO_USERS = [
   { id: 'demo_u_03', username: 'demo_local',   name: '王大偉', handle: 'wang_local',   city: '岡山區', points: 50  },
 ];
 
-// 正門 22.6916°N 120.3767°E；地標依校內各棟與深中路周邊設置
+// 正門 22.7729°N 120.4007°E（深中路58號公車站確認座標）
 const DEMO_HAZARDS = [
   // ── 校門口（正門深中路58號）──
-  { id: 'demo_h_01', lat: 22.6916, lng: 120.3767, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '正門校門口入口大坑洞',          description: '深中路58號校門口右側路面有大型坑洞，機車入校時容易顛簸，雨天積水深達10公分。', severity: 4, status: 'pending',  userId: 'demo_u_01', color1: '#FF3B4E', color2: '#FF6B35' },
-  // ── 深中路校門前三叉路口 ──
-  { id: 'demo_h_02', lat: 22.6907, lng: 120.3762, categoryId: 'cat_turn',     typeEmoji: '🚦', label: '危險路口',    title: '深中路校門前三叉路口無號誌',     description: '校門口前深中路與橫山路交叉三叉口無號誌管制，尖峰時段車輛搶道嚴重，已發生多起擦撞。', severity: 5, status: 'pending',  userId: 'demo_u_02', color1: '#FF3B4E', color2: '#C0392B' },
+  { id: 'demo_h_01', lat: 22.7729, lng: 120.4007, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '正門校門口入口大坑洞',          description: '深中路58號校門口右側路面有大型坑洞，機車入校時容易顛簸，雨天積水深達10公分。', severity: 4, status: 'pending',  userId: 'demo_u_01', color1: '#FF3B4E', color2: '#FF6B35' },
+  // ── 深中路校門前路口 ──
+  { id: 'demo_h_02', lat: 22.7724, lng: 120.4003, categoryId: 'cat_turn',     typeEmoji: '🚦', label: '危險路口',    title: '深中路校門前路口無號誌',         description: '校門口前深中路路口無號誌管制，尖峰時段車輛搶道嚴重，已發生多起擦撞。', severity: 5, status: 'pending',  userId: 'demo_u_02', color1: '#FF3B4E', color2: '#C0392B' },
   // ── 第一教學大樓前停車場 ──
-  { id: 'demo_h_03', lat: 22.6931, lng: 120.3772, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '第一教學大樓前停車場廢材堆積',   description: '第一教學大樓停車場出口堆放廢棄建材，嚴重遮蔽視線，車輛出入危險。', severity: 2, status: 'verified', userId: 'demo_u_03', color1: '#E67E22', color2: '#A04000' },
+  { id: 'demo_h_03', lat: 22.7735, lng: 120.4012, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '第一教學大樓前停車場廢材堆積',   description: '第一教學大樓停車場出口堆放廢棄建材，嚴重遮蔽視線，車輛出入危險。', severity: 2, status: 'verified', userId: 'demo_u_03', color1: '#E67E22', color2: '#A04000' },
   // ── 圖書館前廣場 ──
-  { id: 'demo_h_04', lat: 22.6940, lng: 120.3772, categoryId: 'cat_flooding', typeEmoji: '💧', label: '積水路段',    title: '圖書館前廣場地磚凹陷積水',       description: '圖書館正門廣場地磚凹陷下沉，下雨後大面積積水，行人被迫繞行草地。', severity: 2, status: 'pending',  userId: 'demo_u_01', color1: '#3498DB', color2: '#1A5276' },
+  { id: 'demo_h_04', lat: 22.7742, lng: 120.4016, categoryId: 'cat_flooding', typeEmoji: '💧', label: '積水路段',    title: '圖書館前廣場地磚凹陷積水',       description: '圖書館正門廣場地磚凹陷下沉，下雨後大面積積水，行人被迫繞行草地。', severity: 2, status: 'pending',  userId: 'demo_u_01', color1: '#3498DB', color2: '#1A5276' },
   // ── 行政大樓前 ──
-  { id: 'demo_h_05', lat: 22.6948, lng: 120.3775, categoryId: 'cat_sign',     typeEmoji: '🪧', label: '標誌缺損',    title: '行政大樓前方向指示牌嚴重褪色',   description: '行政大樓正前方指引外賓的方向標誌字體嚴重褪色，外地訪客常迷路。', severity: 1, status: 'pending',  userId: 'demo_u_02', color1: '#9B59B6', color2: '#6C3483' },
+  { id: 'demo_h_05', lat: 22.7740, lng: 120.4009, categoryId: 'cat_sign',     typeEmoji: '🪧', label: '標誌缺損',    title: '行政大樓前方向指示牌嚴重褪色',   description: '行政大樓正前方指引外賓的方向標誌字體嚴重褪色，外地訪客常迷路。', severity: 1, status: 'pending',  userId: 'demo_u_02', color1: '#9B59B6', color2: '#6C3483' },
   // ── 北側校道 ──
-  { id: 'demo_h_06', lat: 22.6954, lng: 120.3774, categoryId: 'cat_marking',  typeEmoji: '⚠️', label: '標線不清',    title: '北側校內主幹道車道標線褪色',      description: '校內北側主幹道雙向車道分隔白線幾乎完全消失，夜間無法判斷行向，事故風險高。', severity: 3, status: 'pending',  userId: 'demo_u_03', color1: '#FFB800', color2: '#FF8C00' },
+  { id: 'demo_h_06', lat: 22.7748, lng: 120.4014, categoryId: 'cat_marking',  typeEmoji: '⚠️', label: '標線不清',    title: '北側校內主幹道車道標線褪色',      description: '校內北側主幹道雙向車道分隔白線幾乎完全消失，夜間無法判斷行向，事故風險高。', severity: 3, status: 'pending',  userId: 'demo_u_03', color1: '#FFB800', color2: '#FF8C00' },
   // ── 宿舍區前（已修復）──
-  { id: 'demo_h_07', lat: 22.6958, lng: 120.3780, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '學生宿舍區前路面坑洞（已修復）',  description: '宿舍前方路面坑洞已完成回填，路面恢復平整，感謝校方即時處理。', severity: 3, status: 'fixed',    userId: 'demo_u_01', color1: '#FF3B4E', color2: '#FF6B35' },
+  { id: 'demo_h_07', lat: 22.7752, lng: 120.4021, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '學生宿舍區前路面坑洞（已修復）',  description: '宿舍前方路面坑洞已完成回填，路面恢復平整，感謝校方即時處理。', severity: 3, status: 'fixed',    userId: 'demo_u_01', color1: '#FF3B4E', color2: '#FF6B35' },
   // ── 運動場旁 ──
-  { id: 'demo_h_08', lat: 22.6963, lng: 120.3766, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '綜合運動場旁柏油路面整段隆起',    description: '運動場西側道路路面整段柏油隆起破裂，跑步及騎車路過均有危險，已有輪胎受損案例。', severity: 4, status: 'verified', userId: 'demo_u_02', color1: '#FF3B4E', color2: '#FF6B35' },
+  { id: 'demo_h_08', lat: 22.7755, lng: 120.4009, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '綜合運動場旁柏油路面整段隆起',    description: '運動場西側道路路面整段柏油隆起破裂，跑步及騎車路過均有危險，已有輪胎受損案例。', severity: 4, status: 'verified', userId: 'demo_u_02', color1: '#FF3B4E', color2: '#FF6B35' },
   // ── 北側停車場 ──
-  { id: 'demo_h_09', lat: 22.6951, lng: 120.3793, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '北側停車場出口施工圍籬佔道',      description: '北側停車場出口有施工圍籬突出至車道，大型車輛出入困難且有碰撞風險。', severity: 3, status: 'verified', userId: 'demo_u_03', color1: '#E67E22', color2: '#A04000' },
+  { id: 'demo_h_09', lat: 22.7750, lng: 120.4023, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '北側停車場出口施工圍籬佔道',      description: '北側停車場出口有施工圍籬突出至車道，大型車輛出入困難且有碰撞風險。', severity: 3, status: 'verified', userId: 'demo_u_03', color1: '#E67E22', color2: '#A04000' },
   // ── 後門 ──
-  { id: 'demo_h_10', lat: 22.6961, lng: 120.3759, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '後門往宿舍路段路面嚴重破損',      description: '後門往宿舍的校內道路多處破損，重型車輛進出更加劇坑洞擴大，震動感明顯。', severity: 4, status: 'pending',  userId: 'demo_u_01', color1: '#FF3B4E', color2: '#FF6B35' },
+  { id: 'demo_h_10', lat: 22.7758, lng: 120.4004, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '後門往宿舍路段路面嚴重破損',      description: '後門往宿舍的校內道路多處破損，重型車輛進出更加劇坑洞擴大，震動感明顯。', severity: 4, status: 'pending',  userId: 'demo_u_01', color1: '#FF3B4E', color2: '#FF6B35' },
   // ── 西側圍牆 ──
-  { id: 'demo_h_11', lat: 22.6941, lng: 120.3754, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '西側圍牆旁路邊崩塌下陷',          description: '西側圍牆外沿路邊土基流失崩塌，形成連續坑洞，機車沿邊行駛有落車風險。', severity: 3, status: 'pending',  userId: 'demo_u_02', color1: '#FF3B4E', color2: '#FF6B35' },
+  { id: 'demo_h_11', lat: 22.7738, lng: 120.3998, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '西側圍牆旁路邊崩塌下陷',          description: '西側圍牆外沿路邊土基流失崩塌，形成連續坑洞，機車沿邊行駛有落車風險。', severity: 3, status: 'pending',  userId: 'demo_u_02', color1: '#FF3B4E', color2: '#FF6B35' },
   // ── 環形道路低點 ──
-  { id: 'demo_h_12', lat: 22.6950, lng: 120.3764, categoryId: 'cat_flooding', typeEmoji: '💧', label: '積水路段',    title: '校內環形道路最低點嚴重積水',      description: '校內環形道路最低窪處每逢大雨必積水，深達15公分，曾導致機車熄火。', severity: 3, status: 'verified', userId: 'demo_u_03', color1: '#3498DB', color2: '#1A5276' },
+  { id: 'demo_h_12', lat: 22.7745, lng: 120.4012, categoryId: 'cat_flooding', typeEmoji: '💧', label: '積水路段',    title: '校內環形道路最低點嚴重積水',      description: '校內環形道路最低窪處每逢大雨必積水，深達15公分，曾導致機車熄火。', severity: 3, status: 'verified', userId: 'demo_u_03', color1: '#3498DB', color2: '#1A5276' },
   // ── 東側外圍 ──
-  { id: 'demo_h_13', lat: 22.6943, lng: 120.3796, categoryId: 'cat_flooding', typeEmoji: '💧', label: '積水路段',    title: '東側外圍道路排水溝溢流',          description: '東側校外圍道路排水溝容量不足，豪雨時溢流至路面，積水深達10公分以上。', severity: 3, status: 'pending',  userId: 'demo_u_01', color1: '#3498DB', color2: '#1A5276' },
+  { id: 'demo_h_13', lat: 22.7737, lng: 120.4026, categoryId: 'cat_flooding', typeEmoji: '💧', label: '積水路段',    title: '東側外圍道路排水溝溢流',          description: '東側校外圍道路排水溝容量不足，豪雨時溢流至路面，積水深達10公分以上。', severity: 3, status: 'pending',  userId: 'demo_u_01', color1: '#3498DB', color2: '#1A5276' },
   // ── 北出口急彎 ──
-  { id: 'demo_h_14', lat: 22.6969, lng: 120.3779, categoryId: 'cat_turn',     typeEmoji: '🚦', label: '危險路口',    title: '北出口急彎路段完全無路燈',        description: '校園北出口急彎處無任何路燈照明，夜間騎車完全靠車燈，已有機車因此摔倒。', severity: 4, status: 'pending',  userId: 'demo_u_02', color1: '#FF3B4E', color2: '#C0392B' },
-  // ── 深中路橫山路口（校外）──
-  { id: 'demo_h_15', lat: 22.6905, lng: 120.3758, categoryId: 'cat_turn',     typeEmoji: '🚦', label: '危險路口',    title: '深中路橫山路口視線遭樹叢遮蔽',   description: '校門對面深中路與橫山路大型路口，路側樹叢遮蔽視線嚴重，已記錄多次接近事故。', severity: 5, status: 'verified', userId: 'demo_u_03', color1: '#FF3B4E', color2: '#C0392B' },
+  { id: 'demo_h_14', lat: 22.7762, lng: 120.4015, categoryId: 'cat_turn',     typeEmoji: '🚦', label: '危險路口',    title: '北出口急彎路段完全無路燈',        description: '校園北出口急彎處無任何路燈照明，夜間騎車完全靠車燈，已有機車因此摔倒。', severity: 4, status: 'pending',  userId: 'demo_u_02', color1: '#FF3B4E', color2: '#C0392B' },
+  // ── 深中路路口（校外）──
+  { id: 'demo_h_15', lat: 22.7719, lng: 120.4001, categoryId: 'cat_turn',     typeEmoji: '🚦', label: '危險路口',    title: '深中路路口視線遭樹叢遮蔽',        description: '校門南側深中路路口，路側樹叢遮蔽視線嚴重，已記錄多次接近事故。', severity: 5, status: 'verified', userId: 'demo_u_03', color1: '#FF3B4E', color2: '#C0392B' },
   // ── 深中路便利商店前（校外）──
-  { id: 'demo_h_16', lat: 22.6910, lng: 120.3778, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '深中路便利商店前機車長期佔用人行道', description: '校門旁便利商店前機車大量違停於人行道，行人被迫走車道，假日情況更嚴重。', severity: 2, status: 'pending',  userId: 'demo_u_01', color1: '#E67E22', color2: '#A04000' },
+  { id: 'demo_h_16', lat: 22.7726, lng: 120.4015, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '深中路便利商店前機車長期佔用人行道', description: '校門旁便利商店前機車大量違停於人行道，行人被迫走車道，假日情況更嚴重。', severity: 2, status: 'pending',  userId: 'demo_u_01', color1: '#E67E22', color2: '#A04000' },
   // ── 燕巢國小前（校外）──
-  { id: 'demo_h_17', lat: 22.6882, lng: 120.3762, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '燕巢國小前人行道施工圍籬（已清）', description: '燕巢國小正門前人行道施工圍籬已撤除，步行空間恢復正常。', severity: 3, status: 'fixed',    userId: 'demo_u_02', color1: '#E67E22', color2: '#A04000' },
-  // ── 燕巢加油站旁（校外）──
-  { id: 'demo_h_18', lat: 22.6895, lng: 120.3755, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '燕巢加油站旁路面多處破損',        description: '加油站出入口旁路面因重車輾壓形成多處坑洞，車輛進出加油站時嚴重顛簸。', severity: 3, status: 'pending',  userId: 'demo_u_03', color1: '#FF3B4E', color2: '#FF6B35' },
+  { id: 'demo_h_17', lat: 22.7710, lng: 120.4000, categoryId: 'cat_obstacle', typeEmoji: '🚧', label: '路障/障礙物', title: '燕巢國小前人行道施工圍籬（已清）', description: '燕巢國小正門前人行道施工圍籬已撤除，步行空間恢復正常。', severity: 3, status: 'fixed',    userId: 'demo_u_02', color1: '#E67E22', color2: '#A04000' },
+  // ── 深中路加油站旁（校外）──
+  { id: 'demo_h_18', lat: 22.7715, lng: 120.3993, categoryId: 'cat_pothole',  typeEmoji: '🕳️', label: '路面坑洞',    title: '深中路加油站旁路面多處破損',       description: '加油站出入口旁路面因重車輾壓形成多處坑洞，車輛進出加油站時嚴重顛簸。', severity: 3, status: 'pending',  userId: 'demo_u_03', color1: '#FF3B4E', color2: '#FF6B35' },
   // ── 深中路往市區引道（校外）──
-  { id: 'demo_h_19', lat: 22.6880, lng: 120.3760, categoryId: 'cat_marking',  typeEmoji: '⚠️', label: '標線不清',    title: '深中路往燕巢市區方向標線模糊',    description: '深中路往燕巢市區方向的導向標線嚴重褪色，外地駕駛容易走錯方向。', severity: 3, status: 'pending',  userId: 'demo_u_01', color1: '#FFB800', color2: '#FF8C00' },
+  { id: 'demo_h_19', lat: 22.7705, lng: 120.3998, categoryId: 'cat_marking',  typeEmoji: '⚠️', label: '標線不清',    title: '深中路往燕巢市區方向標線模糊',    description: '深中路往燕巢市區方向的導向標線嚴重褪色，外地駕駛容易走錯方向。', severity: 3, status: 'pending',  userId: 'demo_u_01', color1: '#FFB800', color2: '#FF8C00' },
   // ── 限速標誌（南側出口）──
-  { id: 'demo_h_20', lat: 22.6921, lng: 120.3769, categoryId: 'cat_sign',     typeEmoji: '🪧', label: '標誌缺損',    title: '南側出口限速30標誌遭颱風吹倒',   description: '南側校園出口限速30標誌颱風後傾倒至今未豎立，車速明顯偏快。', severity: 2, status: 'pending',  userId: 'demo_u_02', color1: '#9B59B6', color2: '#6C3483' },
+  { id: 'demo_h_20', lat: 22.7722, lng: 120.4010, categoryId: 'cat_sign',     typeEmoji: '🪧', label: '標誌缺損',    title: '南側出口限速30標誌遭颱風吹倒',   description: '南側校園出口限速30標誌颱風後傾倒至今未豎立，車速明顯偏快。', severity: 2, status: 'pending',  userId: 'demo_u_02', color1: '#9B59B6', color2: '#6C3483' },
 ];
 
 // posts 對應每個 hazard，reporterName 來自 DEMO_USERS name
