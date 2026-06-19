@@ -120,6 +120,14 @@ body {
   flex: 0 0 50vh;
   width: 100%;
   min-height: 0;
+  position: relative;
+  isolation: isolate; /* 隔離 Leaflet 內部 z-index，避免蓋住上方篩選列 */
+  z-index: 0;
+}
+
+#map-filters {
+  position: relative;
+  z-index: 1;
 }
 
 /* Scrollable area below the map */
