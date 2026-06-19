@@ -72,7 +72,7 @@ document.getElementById('auth-submit').addEventListener('click', async () => {
         currentUser = user;
         authOverlay.classList.add('hidden');
         await loadState();
-        window.panTo && window.panTo(22.7735, 120.4010, 16);
+        window.panTo && window.panTo(22.6314, 120.3019, 14);
         showToast('✅ 展示模式，地圖移至燕巢校區');
         return;
       }
@@ -393,7 +393,7 @@ window.triggerDemoSeed = async (btn) => {
     updateStatsBar(STATE);
     renderNearbyList(STATE);
     window.renderMapHazards && renderMapHazards(STATE.hazards, STATE.categories);
-    window.panTo && window.panTo(22.7735, 120.4010, 16);
+    window.panTo && window.panTo(22.6314, 120.3019, 14);
     activateView('map');
     showToast('✅ 展示資料已載入，地圖移至燕巢校區');
   } catch {
@@ -415,7 +415,7 @@ window.triggerDemoSeed = async (btn) => {
     await loadState();
     // demo 帳號 panTo 燕巢，一般帳號自動定位
     if (user.username === 'demo') {
-      window.panTo && window.panTo(22.7735, 120.4010, 16);
+      window.panTo && window.panTo(22.6314, 120.3019, 14);
     } else {
       window.locateMe && window.locateMe(true);
     }
