@@ -77,7 +77,11 @@ module.exports = function adminRouter() {
     const fixed    = Number(rowsToObjects(db.exec("SELECT COUNT(1) AS c FROM hazards WHERE status='fixed'"))[0]?.c || 0);
     const verified = Number(rowsToObjects(db.exec("SELECT COUNT(1) AS c FROM hazards WHERE status='verified'"))[0]?.c || 0);
     const users    = Number(rowsToObjects(db.exec('SELECT COUNT(1) AS c FROM users'))[0]?.c || 0);
-    res.json({ ok: true, stats: { total, pending, fixed, verified, users } });
+    const catRows  = rowsToObjects(db.exec('SELECT c.name, COUNT(h.id) AS cnt FROM categories c LEFT JOIN hazards h ON h.categoryId=c.id GROUP BY c.id'));
+    const sevRows  = rowsToObjects(db.exec('SELECT severity, COUNT(1) AS cnt FROM hazards GROUP BY severity'));
+    const byCategory = {}; catRows.forEach((r) => { byCategory[r.name] = Number(r.cnt || 0); });
+    const bySeverity = {}; sevRows.forEach((r) => { bySeverity[r.severity] = Number(r.cnt || 0); });
+    res.json({ ok: true, stats: { total, pending, fixed, verified, users, byCategory, bySeverity } });
   });
 
   router.get('/export/csv', (req, res) => {

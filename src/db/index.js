@@ -42,8 +42,10 @@ function migrate(db) {
     ['hazards', 'updatedAt',   'ALTER TABLE hazards ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0'],
     ['users',   'points',      'ALTER TABLE users ADD COLUMN points INTEGER NOT NULL DEFAULT 0'],
     ['users',   'email',       'ALTER TABLE users ADD COLUMN email TEXT'],
-    ['posts',   'isMine',      'ALTER TABLE posts ADD COLUMN isMine INTEGER NOT NULL DEFAULT 0'],
-    ['posts',   'pinned',      'ALTER TABLE posts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0'],
+    ['posts',   'isMine',         'ALTER TABLE posts ADD COLUMN isMine INTEGER NOT NULL DEFAULT 0'],
+    ['posts',   'pinned',         'ALTER TABLE posts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0'],
+    ['user_profiles', 'avatar',   'ALTER TABLE user_profiles ADD COLUMN avatar TEXT'],
+    ['hazards', 'userId',         'ALTER TABLE hazards ADD COLUMN userId TEXT'],
   ];
   cols.forEach(([table, col, sql]) => {
     if (!hasColumn(db, table, col)) db.run(sql);

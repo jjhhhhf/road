@@ -62,7 +62,40 @@ async function renderAchievements(state) {
             </div>
           </div>`;
       }).join('')}
-    </div>`;
+    </div>
+    <div class="badges-section-title" style="margin-top:24px">🏆 積分排行榜</div>
+    <div id="leaderboard-list"><div style="text-align:center;color:var(--text3);padding:16px">載入中…</div></div>`;
+
+  loadLeaderboard(state.me?.id);
+}
+
+async function loadLeaderboard(myId) {
+  const listEl = document.getElementById('leaderboard-list');
+  if (!listEl) return;
+  try {
+    const { leaders } = await API.profile.leaderboard();
+    if (!leaders.length) { listEl.innerHTML = '<p style="text-align:center;color:var(--text3);padding:16px">暫無資料</p>'; return; }
+    const rankEmoji = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1);
+    const rankClass = (i) => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    listEl.innerHTML = leaders.map((u, i) => {
+      const isMe = String(u.id) === String(myId);
+      const initial = (u.name || '?')[0].toUpperCase();
+      return `
+        <div class="leaderboard-row${isMe ? ' me-row' : ''}">
+          <div class="leaderboard-rank ${rankClass(i)}">${rankEmoji(i)}</div>
+          <div class="leaderboard-avatar">
+            ${u.avatar ? `<img src="${u.avatar}" alt="">` : initial}
+          </div>
+          <div class="leaderboard-info">
+            <div class="leaderboard-name">${u.name || '匿名'}${isMe ? ' <span style="font-size:11px;color:var(--accent)">（我）</span>' : ''}</div>
+            <div class="leaderboard-city">${u.city || ''}</div>
+          </div>
+          <div class="leaderboard-pts">${(u.points || 0).toLocaleString()}</div>
+        </div>`;
+    }).join('');
+  } catch {
+    listEl.innerHTML = '<p style="text-align:center;color:var(--text3);padding:16px">無法載入排行榜</p>';
+  }
 }
 
 window.renderAchievements = renderAchievements;

@@ -4,6 +4,33 @@ const { rowsToObjects, randomId } = require('../db/index');
 module.exports = function postsRouter(requireUser, getUserProfile) {
   const router = express.Router();
 
+  router.get('/', requireUser, (req, res) => {
+    const db = req.db;
+    const { id: userId } = req.user;
+    const page  = Math.max(1, parseInt(req.query.page  || '1', 10));
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '10', 10)));
+    const offset = (page - 1) * limit;
+    const total = Number(rowsToObjects(db.exec('SELECT COUNT(1) AS c FROM posts'))[0]?.c || 0);
+    const posts = rowsToObjects(db.exec(
+      'SELECT * FROM posts ORDER BY pinned DESC, createdAt DESC LIMIT ? OFFSET ?', [limit, offset]
+    ));
+    const comments = rowsToObjects(db.exec('SELECT * FROM comments ORDER BY at ASC'));
+    const byPost = {};
+    comments.forEach((c) => {
+      byPost[c.postId] = byPost[c.postId] || [];
+      byPost[c.postId].push({ author: c.author, text: c.text, at: c.at });
+    });
+    const postsOut = posts.map((p) => ({
+      id: p.id, hazardId: p.hazardId, typeEmoji: p.typeEmoji, label: p.label,
+      title: p.title, createdAt: p.createdAt, votes: p.votes, pinned: !!p.pinned,
+      comments: byPost[p.id] || [],
+      isMine: String(p.userId || '') === String(userId),
+      voted: !!rowsToObjects(db.exec('SELECT 1 FROM post_votes WHERE postId=? AND userId=? LIMIT 1', [p.id, userId]))[0],
+      reporterName: p.reporterName, photoUrl: p.photoUrl || null,
+    }));
+    res.json({ ok: true, posts: postsOut, total, page, limit, hasMore: offset + limit < total });
+  });
+
   router.post('/:postId/vote', requireUser, (req, res) => {
     const db     = req.db;
     const postId = String(req.params.postId);

@@ -139,6 +139,7 @@ select.select-status {
   <div class="nav-tabs" id="nav-tabs">
     <button class="tab active" data-panel="stats">📊 總覽</button>
     <button class="tab" data-panel="hazards">🗺️ 危險點</button>
+    <button class="tab" data-panel="map-review">📍 地圖審核</button>
     <button class="tab" data-panel="posts">📝 貼文</button>
     <button class="tab" data-panel="comments">💬 留言</button>
     <button class="tab" data-panel="users">👤 用戶</button>
@@ -148,6 +149,16 @@ select.select-status {
   <!-- Stats -->
   <div id="panel-stats" class="panel active">
     <div class="stats-row" id="stats-row"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+      <div class="stat-card">
+        <div class="s-icon" style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:12px">各類別佔比</div>
+        <canvas id="chart-category" height="200"></canvas>
+      </div>
+      <div class="stat-card">
+        <div class="s-icon" style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:12px">嚴重度分布</div>
+        <canvas id="chart-severity" height="200"></canvas>
+      </div>
+    </div>
   </div>
 
   <!-- Hazards -->
@@ -163,15 +174,32 @@ select.select-status {
       </select>
       <button class="btn-filter" onclick="loadHazards()">套用篩選</button>
     </div>
+    <div class="toolbar" id="batch-toolbar" style="display:none">
+      <span id="selected-count" style="font-size:13px;color:var(--text2)">已選 0 筆</span>
+      <button class="btn" onclick="batchStatus('verified')">✅ 批量驗證</button>
+      <button class="btn" onclick="batchStatus('fixed')">🔧 批量修復</button>
+      <button class="btn" onclick="batchStatus('rejected')">❌ 批量駁回</button>
+      <button class="btn btn-red" onclick="batchDelete()">🗑️ 批量刪除</button>
+    </div>
     <div class="table-wrap">
       <table id="hazards-table">
         <thead><tr>
+          <th><input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this)"></th>
           <th>標題</th><th>類型</th><th>嚴重度</th><th>狀態</th>
-          <th>座標</th><th>時間</th><th id="hazard-action-th">操作</th>
+          <th>座標</th><th>時間</th><th>操作</th>
         </tr></thead>
         <tbody></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Map Review -->
+  <div id="panel-map-review" class="panel">
+    <div class="toolbar">
+      <span style="font-size:13px;color:var(--text2)">點擊 Marker 可快速變更狀態</span>
+      <button class="btn-filter" onclick="loadMapReview()">重新載入</button>
+    </div>
+    <div id="admin-map" style="height:calc(100vh - 160px);border-radius:12px;overflow:hidden;border:1px solid var(--border)"></div>
   </div>
 
   <!-- Posts -->
@@ -218,8 +246,13 @@ select.select-status {
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 let authHeader = null;
+let selectedIds = new Set();
+let adminMap = null;
 
 const fmt = (ts) => new Date(ts).toLocaleString('zh-TW');
 const statusBadge = (s) => `<span class="badge badge-${s}">${{pending:'待審',verified:'已驗證',fixed:'已修復',rejected:'已駁回'}[s]||s}</span>`;
@@ -246,7 +279,7 @@ document.querySelectorAll('.tab').forEach((tab) => {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
-    const loaders = { hazards: loadHazards, posts: loadPosts, comments: loadComments, users: loadUsers };
+    const loaders = { hazards: loadHazards, posts: loadPosts, comments: loadComments, users: loadUsers, 'map-review': loadMapReview };
     loaders[tab.dataset.panel]?.();
   });
 });
@@ -272,17 +305,50 @@ function renderStats(s) {
       <div class="s-num" style="color:${color}">${num ?? 0}</div>
       <div class="s-lbl">${lbl}</div>
     </div>`).join('');
+  renderCharts(s);
+}
+
+let catChart = null, sevChart = null;
+function renderCharts(s) {
+  if (!window.Chart) return;
+  const catCtx = document.getElementById('chart-category');
+  const sevCtx = document.getElementById('chart-severity');
+  if (!catCtx || !sevCtx) return;
+  if (catChart) catChart.destroy();
+  if (sevChart) sevChart.destroy();
+  const catData = s.byCategory || {};
+  const sevData = s.bySeverity || {};
+  const base = { color: '#aaa', borderColor: '#333' };
+  catChart = new Chart(catCtx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(catData),
+      datasets: [{ data: Object.values(catData), backgroundColor: ['#FF3B4E','#FF6B35','#F5A623','#27AE60','#2E86C1','#9B59B6'], borderWidth: 0 }],
+    },
+    options: { plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } } },
+  });
+  sevChart = new Chart(sevCtx, {
+    type: 'bar',
+    data: {
+      labels: ['1 輕微','2 輕度','3 中度','4 嚴重','5 極危'],
+      datasets: [{ data: [1,2,3,4,5].map(i => sevData[i]||0), backgroundColor: ['#27AE60','#8BC34A','#F5A623','#FF6B35','#FF3B4E'], borderWidth: 0, borderRadius: 4 }],
+    },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#666' }, grid: { color: '#222' } }, y: { ticks: { color: '#666' }, grid: { color: '#222' } } } },
+  });
 }
 
 // ── Hazards ────────────────────────────────────────────
 async function loadHazards() {
+  selectedIds.clear();
+  updateBatchToolbar();
   const filter = document.getElementById('hazard-filter').value;
   const q = filter ? '?status=' + filter : '';
   const data = await api('GET', '/api/admin/hazards' + q);
   const rows = data.items || [];
   document.querySelector('#hazards-table tbody').innerHTML = rows.map(h => `
     <tr>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.title}">${h.title}</td>
+      <td><input type="checkbox" class="row-cb" data-id="${h.id}" onchange="onRowCheck(this)"></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.title}">${h.title}</td>
       <td>${h.typeEmoji || ''} ${h.label || ''}</td>
       <td>${h.severity || '—'}/5</td>
       <td>
@@ -295,7 +361,45 @@ async function loadHazards() {
       <td style="font-size:11px;color:var(--text3)">${(+h.lat||0).toFixed(4)}, ${(+h.lng||0).toFixed(4)}</td>
       <td style="font-size:11px;color:var(--text3);white-space:nowrap">${fmt(h.createdAt)}</td>
       <td><button class="btn btn-red" onclick="delHazard('${h.id}')">刪除</button></td>
-    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">無資料</td></tr>';
+    </tr>`).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:24px">無資料</td></tr>`;
+}
+
+function onRowCheck(cb) {
+  if (cb.checked) selectedIds.add(cb.dataset.id);
+  else selectedIds.delete(cb.dataset.id);
+  updateBatchToolbar();
+}
+
+function toggleSelectAll(masterCb) {
+  document.querySelectorAll('.row-cb').forEach((cb) => {
+    cb.checked = masterCb.checked;
+    if (masterCb.checked) selectedIds.add(cb.dataset.id);
+    else selectedIds.delete(cb.dataset.id);
+  });
+  updateBatchToolbar();
+}
+
+function updateBatchToolbar() {
+  const tb = document.getElementById('batch-toolbar');
+  const cnt = document.getElementById('selected-count');
+  const show = selectedIds.size > 0;
+  if (tb) tb.style.display = show ? 'flex' : 'none';
+  if (cnt) cnt.textContent = `已選 ${selectedIds.size} 筆`;
+}
+
+async function batchStatus(status) {
+  if (!selectedIds.size) return;
+  const label = {verified:'已驗證',fixed:'已修復',rejected:'已駁回'}[status];
+  if (!confirm(`確定將 ${selectedIds.size} 筆狀態改為「${label}」？`)) return;
+  await Promise.all([...selectedIds].map(id => api('PATCH', `/api/admin/hazards/${id}/status`, { status })));
+  loadHazards();
+}
+
+async function batchDelete() {
+  if (!selectedIds.size) return;
+  if (!confirm(`確定刪除 ${selectedIds.size} 筆？此操作不可逆。`)) return;
+  await Promise.all([...selectedIds].map(id => api('DELETE', '/api/admin/hazards/' + id)));
+  loadHazards();
 }
 
 async function patchStatus(id, status) {
@@ -305,6 +409,44 @@ async function delHazard(id) {
   if (!confirm('確定刪除？')) return;
   await api('DELETE', '/api/admin/hazards/' + id);
   loadHazards();
+}
+
+// ── Map Review ─────────────────────────────────────────
+async function loadMapReview() {
+  const mapEl = document.getElementById('admin-map');
+  if (!mapEl || !window.L) return;
+  if (!adminMap) {
+    adminMap = L.map(mapEl).setView([22.63, 120.31], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(adminMap);
+  }
+  const { items = [] } = await api('GET', '/api/admin/hazards?status=pending');
+  adminMap.eachLayer((l) => { if (l instanceof L.Marker) adminMap.removeLayer(l); });
+  items.forEach((h) => {
+    if (!h.lat || !h.lng) return;
+    const icon = L.divIcon({
+      html: `<div style="background:#F5A623;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.4)"><span style="transform:rotate(45deg);font-size:14px">${h.typeEmoji||'⚠️'}</span></div>`,
+      className: '', iconSize: [30, 30], iconAnchor: [15, 30],
+    });
+    const m = L.marker([+h.lat, +h.lng], { icon }).addTo(adminMap);
+    m.bindPopup(`
+      <div style="min-width:180px;font-family:sans-serif">
+        <div style="font-weight:700;margin-bottom:6px">${h.title}</div>
+        <div style="font-size:12px;color:#888;margin-bottom:8px">${h.label} · 嚴重度 ${h.severity}/5</div>
+        <button onclick="mapPatch('${h.id}','verified',this)" style="padding:5px 10px;margin-right:4px;background:#2E86C1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">✅ 驗證</button>
+        <button onclick="mapPatch('${h.id}','fixed',this)" style="padding:5px 10px;margin-right:4px;background:#27AE60;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🔧 修復</button>
+        <button onclick="mapPatch('${h.id}','rejected',this)" style="padding:5px 10px;background:#FF3B4E;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">❌ 駁回</button>
+      </div>`);
+  });
+  if (items.length) {
+    const latlngs = items.filter(h => h.lat && h.lng).map(h => [+h.lat, +h.lng]);
+    if (latlngs.length) adminMap.fitBounds(latlngs, { padding: [40, 40] });
+  }
+}
+
+async function mapPatch(id, status, btn) {
+  btn.disabled = true;
+  await api('PATCH', `/api/admin/hazards/${id}/status`, { status });
+  loadMapReview();
 }
 
 // ── Posts ──────────────────────────────────────────────

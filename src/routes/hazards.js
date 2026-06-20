@@ -86,5 +86,40 @@ module.exports = function hazardsRouter(requireUser, getUserProfile, checkAndAwa
     res.json({ ok: true, hazard: { ...h, photos: photos.map((p) => p.url) } });
   });
 
+  router.patch('/:id', requireUser, (req, res) => {
+    const db = req.db;
+    const hazardId = req.params.id;
+    const row = rowsToObjects(db.exec('SELECT userId FROM hazards WHERE id=? LIMIT 1', [hazardId]))[0];
+    if (!row) return res.status(404).json({ error: 'not_found' });
+    if (String(row.userId) !== String(req.user.id)) return res.status(403).json({ error: 'forbidden' });
+    const { title, description, severity } = req.body || {};
+    const sets = []; const vals = [];
+    if (title       !== undefined) { sets.push('title=?');       vals.push(String(title).trim().slice(0, 80)); }
+    if (description !== undefined) { sets.push('description=?'); vals.push(String(description).trim().slice(0, 500) || null); }
+    if (severity    !== undefined) { sets.push('severity=?');    vals.push(Math.min(5, Math.max(1, Number(severity) || 3))); }
+    if (sets.length) {
+      sets.push('updatedAt=?'); vals.push(Date.now()); vals.push(hazardId);
+      db.run(`UPDATE hazards SET ${sets.join(',')} WHERE id=?`, vals);
+      if (title !== undefined) db.run('UPDATE posts SET title=? WHERE hazardId=?', [String(title).trim().slice(0, 80), hazardId]);
+      req.persist();
+    }
+    res.json({ ok: true });
+  });
+
+  router.delete('/:id', requireUser, (req, res) => {
+    const db = req.db;
+    const hazardId = req.params.id;
+    const row = rowsToObjects(db.exec('SELECT userId FROM hazards WHERE id=? LIMIT 1', [hazardId]))[0];
+    if (!row) return res.status(404).json({ error: 'not_found' });
+    if (String(row.userId) !== String(req.user.id)) return res.status(403).json({ error: 'forbidden' });
+    db.run('DELETE FROM hazard_photos WHERE hazardId=?', [hazardId]);
+    db.run('DELETE FROM comments WHERE postId IN (SELECT id FROM posts WHERE hazardId=?)', [hazardId]);
+    db.run('DELETE FROM post_votes WHERE postId IN (SELECT id FROM posts WHERE hazardId=?)', [hazardId]);
+    db.run('DELETE FROM posts WHERE hazardId=?', [hazardId]);
+    db.run('DELETE FROM hazards WHERE id=?', [hazardId]);
+    req.persist();
+    res.json({ ok: true });
+  });
+
   return router;
 };

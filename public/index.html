@@ -8,12 +8,21 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
 
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="loading-logo">路口<span>排雷</span></div>
+  <div class="loading-spinner"></div>
+  <div class="loading-hint">連線中，請稍候…</div>
+</div>
+
 <!-- Auth Overlay -->
-<div id="auth-overlay">
+<div id="auth-overlay" class="hidden">
   <div class="auth-box">
     <div class="auth-logo">路口<span>排雷</span></div>
     <div class="auth-subtitle">交通缺陷共筆地圖</div>
@@ -59,8 +68,13 @@
 
     <!-- Map View -->
     <div id="map-view" class="view active">
-      <div id="map-filters"></div>
+      <div id="map-filters-wrap">
+        <div id="map-filters"></div>
+        <button id="filter-drawer-btn" class="filter-more-btn" title="篩選">⚙️</button>
+      </div>
       <div id="map"></div>
+      <div id="map-drag-handle"><div class="drag-handle-bar"></div></div>
+      <div id="ptr-indicator" class="hidden">↓ 下拉刷新</div>
       <div id="map-scroll">
         <div id="stats-bar">
           <div class="stat-item">
@@ -76,14 +90,23 @@
             <div class="stat-label">已修復</div>
           </div>
         </div>
+        <div id="map-search-wrap" class="hidden">
+          <input id="map-search" class="form-input" type="search" placeholder="搜尋危險點標題或地址…">
+        </div>
         <div id="nearby-list"></div>
       </div>
     </div>
 
     <!-- Community View -->
     <div id="community-view" class="view">
-      <div class="community-header"><h2>社群附議</h2></div>
+      <div class="community-header">
+        <h2>社群附議</h2>
+        <div id="community-filter-bar"></div>
+      </div>
       <div id="community-list"></div>
+      <div id="community-load-more" class="hidden">
+        <button id="load-more-btn" class="btn-secondary" style="margin:8px 14px 0;width:calc(100% - 28px)">載入更多</button>
+      </div>
     </div>
 
     <!-- Achievements View -->
@@ -105,7 +128,7 @@
       <span class="icon">🗺️</span>地圖
     </button>
     <button class="nav-btn" data-view="community">
-      <span class="icon">💬</span>社群
+      <span class="icon">💬</span>社群<span id="community-badge" class="nav-badge hidden"></span>
     </button>
     <button class="nav-btn" data-view="achievements">
       <span class="icon">🏅</span>成就
@@ -119,7 +142,6 @@
 <!-- FAB -->
 <button id="fab" class="hidden">回報</button>
 
-
 <!-- Report Modal -->
 <div id="report-modal" class="modal-overlay hidden">
   <div class="modal-sheet">
@@ -132,6 +154,11 @@
     <div class="form-group">
       <label class="form-label form-label-required">缺陷類別</label>
       <div id="report-cat-grid" class="cat-grid"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">標題（選填，留空自動產生）</label>
+      <input id="report-title" class="form-input" type="text" placeholder="簡短描述此缺陷…" maxlength="60">
     </div>
 
     <div class="form-group">
@@ -152,13 +179,115 @@
 
     <div class="form-group">
       <label class="form-label">現場照片（選填）</label>
-      <button id="report-photo-btn" class="btn-secondary" style="margin-top:0">上傳照片</button>
-      <input id="report-photo-input" type="file" accept="image/*" style="display:none">
+      <button id="report-photo-btn" class="btn-secondary" style="margin-top:0">📷 上傳照片</button>
+      <input id="report-photo-input" type="file" accept="image/*" capture="environment" style="display:none">
       <div id="report-photo-preview"></div>
     </div>
 
     <div id="gps-status" class="gps-status"></div>
     <button id="report-submit" class="btn-primary">送出回報</button>
+  </div>
+</div>
+
+<!-- Hazard Detail Modal -->
+<div id="hazard-detail-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="modal-title" id="hazard-detail-title">危險點詳情</div>
+      <button id="hazard-detail-close" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div id="hazard-detail-content"></div>
+  </div>
+</div>
+
+<!-- Edit Hazard Modal -->
+<div id="edit-hazard-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="modal-title">編輯回報</div>
+      <button id="edit-hazard-close" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">標題</label>
+      <input id="edit-hazard-title" class="form-input" type="text" maxlength="80">
+    </div>
+    <div class="form-group">
+      <label class="form-label">描述</label>
+      <textarea id="edit-hazard-desc" class="form-input" style="height:80px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">嚴重程度</label>
+      <div class="severity-row" id="edit-sev-row">
+        <button class="sev-btn" data-sev="1">1<br><small>輕微</small></button>
+        <button class="sev-btn" data-sev="2">2<br><small>輕度</small></button>
+        <button class="sev-btn" data-sev="3">3<br><small>中度</small></button>
+        <button class="sev-btn" data-sev="4">4<br><small>嚴重</small></button>
+        <button class="sev-btn" data-sev="5">5<br><small>極危</small></button>
+      </div>
+    </div>
+    <button id="edit-hazard-save" class="btn-primary">儲存變更</button>
+  </div>
+</div>
+
+<!-- Filter Drawer -->
+<div id="filter-drawer" class="modal-overlay hidden">
+  <div class="modal-sheet" style="max-height:75dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="modal-title">篩選條件</div>
+      <button id="filter-drawer-close" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">類別</label>
+      <div id="drawer-cat-grid" class="cat-grid"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">狀態</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="drawer-status-btns">
+        <button class="filter-status-btn active" data-status="all">全部</button>
+        <button class="filter-status-btn" data-status="pending">待審</button>
+        <button class="filter-status-btn" data-status="verified">已驗證</button>
+        <button class="filter-status-btn" data-status="fixed">已修復</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">排序方式</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="drawer-sort-btns">
+        <button class="filter-status-btn active" data-sort="time">最新優先</button>
+        <button class="filter-status-btn" data-sort="distance">距離最近</button>
+        <button class="filter-status-btn" data-sort="severity">最嚴重</button>
+      </div>
+    </div>
+    <button id="filter-apply-btn" class="btn-primary" style="margin-top:8px">套用篩選</button>
+    <button id="filter-reset-btn" class="btn-secondary">重置</button>
+  </div>
+</div>
+
+<!-- All Hazards Modal -->
+<div id="all-hazards-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="modal-title">全部排雷點 <span id="all-hazards-count" style="font-size:13px;font-weight:400;color:var(--text3)"></span></div>
+      <button id="all-hazards-close" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div style="margin-bottom:12px">
+      <input id="all-hazards-search" class="form-input" type="search" placeholder="搜尋標題或地址…">
+    </div>
+    <div id="all-hazards-list"></div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" class="modal-overlay hidden">
+  <div class="modal-sheet" style="max-height:50dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="margin-bottom:14px">分享危險點</div>
+    <div id="share-url-box" class="share-url-box"></div>
+    <button id="share-copy-btn" class="btn-primary" style="margin-top:12px">複製連結</button>
+    <button id="share-close-btn" class="btn-secondary">關閉</button>
   </div>
 </div>
 
@@ -175,6 +304,8 @@
 <div id="toast" class="hidden"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/map.js"></script>

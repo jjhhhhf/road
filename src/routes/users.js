@@ -1,10 +1,11 @@
 const express = require('express');
 const { rowsToObjects } = require('../db/index');
+const upload = require('../middleware/upload');
 
 const FIXED_VOTES_THRESHOLD = 5;
 
 function getUserProfile(db, userId) {
-  const prof = rowsToObjects(db.exec('SELECT name, handle, city FROM user_profiles WHERE userId=? LIMIT 1', [userId]))[0];
+  const prof = rowsToObjects(db.exec('SELECT name, handle, city, avatar FROM user_profiles WHERE userId=? LIMIT 1', [userId]))[0];
   if (!prof) return null;
   const tags = rowsToObjects(
     db.exec('SELECT tagText FROM user_profile_tags WHERE userId=? ORDER BY ord ASC', [userId])
@@ -84,8 +85,10 @@ module.exports = function usersRouter(requireUser) {
 
     const hazards = rowsToObjects(db.exec('SELECT * FROM hazards ORDER BY createdAt DESC')).map((h) => ({
       id: h.id, type: h.typeEmoji, emoji: h.typeEmoji, label: h.label, title: h.title,
+      description: h.description || null,
       lat: h.lat, lng: h.lng, colors: [h.color1, h.color2],
-      severity: h.severity, status: h.status, categoryId: h.categoryId || null, createdAt: h.createdAt, userId: h.userId || null,
+      severity: h.severity, status: h.status, categoryId: h.categoryId || null,
+      createdAt: h.createdAt, userId: h.userId || null,
     }));
 
     const posts    = rowsToObjects(db.exec('SELECT * FROM posts ORDER BY pinned DESC, createdAt DESC'));
@@ -155,6 +158,32 @@ module.exports = function usersRouter(requireUser) {
     checkAndAwardBadges(db, req.persist, req.user.id);
     req.persist();
     res.json({ ok: true, badges: getUserBadges(db, req.user.id) });
+  });
+
+  router.get('/leaderboard', requireUser, (req, res) => {
+    const db = req.db;
+    const rows = rowsToObjects(db.exec(`
+      SELECT u.id, COALESCE(p.name, u.username) AS name, COALESCE(p.city, '') AS city, u.points, p.avatar
+      FROM users u LEFT JOIN user_profiles p ON p.userId = u.id
+      WHERE u.username NOT IN ('admin','admindemo')
+      ORDER BY u.points DESC LIMIT 10
+    `));
+    res.json({ ok: true, leaders: rows });
+  });
+
+  router.post('/avatar', requireUser, upload.single('photo'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'missing_file' });
+    const url = `/uploads/${req.file.filename}`;
+    const db = req.db;
+    const { id: userId } = req.user;
+    const exists = rowsToObjects(db.exec('SELECT userId FROM user_profiles WHERE userId=? LIMIT 1', [userId]))[0];
+    if (exists) {
+      db.run('UPDATE user_profiles SET avatar=? WHERE userId=?', [url, userId]);
+    } else {
+      db.run('INSERT INTO user_profiles (userId, avatar) VALUES (?,?)', [userId, url]);
+    }
+    req.persist();
+    res.json({ ok: true, url });
   });
 
   return router;

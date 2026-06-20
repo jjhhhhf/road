@@ -26,6 +26,8 @@ const API = {
     get: (id) => API.get('/api/hazards/' + id),
     categories: () => API.get('/api/hazards/categories'),
     report: (d) => API.post('/api/hazards/report', d),
+    update: (id, d) => API.patch(`/api/hazards/${id}`, d),
+    delete: (id) => API.delete(`/api/hazards/${id}`),
     upload: async (file) => {
       const fd = new FormData();
       fd.append('photo', file);
@@ -37,6 +39,7 @@ const API = {
     },
   },
   posts: {
+    list: (page = 1, limit = 10) => API.get(`/api/posts?page=${page}&limit=${limit}`),
     vote: (id) => API.post(`/api/posts/${id}/vote`),
     unvote: (id) => API.delete(`/api/posts/${id}/vote`),
     comment: (id, text) => API.post(`/api/posts/${id}/comments`, { text }),
@@ -45,6 +48,16 @@ const API = {
     update: (d) => API.put('/api/profile', d),
     prefs: (d) => API.put('/api/prefs', d),
     badges: () => API.get('/api/badges'),
+    leaderboard: () => API.get('/api/leaderboard'),
+    uploadAvatar: async (file) => {
+      const fd = new FormData();
+      fd.append('photo', file);
+      const base = window.API_BASE || '';
+      const res = await fetch(base + '/api/avatar', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'upload_failed');
+      return data;
+    },
   },
 };
 
