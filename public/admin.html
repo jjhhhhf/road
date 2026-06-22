@@ -149,7 +149,7 @@ select.select-status {
   <!-- Stats -->
   <div id="panel-stats" class="panel active">
     <div class="stats-row" id="stats-row"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px">
       <div class="stat-card">
         <div class="s-icon" style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:12px">各類別佔比</div>
         <canvas id="chart-category" height="200"></canvas>
