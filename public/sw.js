@@ -1,5 +1,5 @@
-const CACHE_NAME = 'lukou-pailei-v4';
-const API_CACHE  = 'lukou-api-v4';
+const CACHE_NAME = 'lukou-pailei-v5';
+const API_CACHE  = 'lukou-api-v5';
 
 const CORE_ASSETS = [
   '/',
